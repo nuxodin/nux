@@ -1,5 +1,5 @@
 
-function transform(scheme, value) {
+export function transform(scheme, value) {
     const transform = scheme.transform;
     if (transform.trim) {
         switch (transform.trim){
@@ -8,30 +8,33 @@ function transform(scheme, value) {
             default:      value = value.trim();
         }
     }
-    if (transform.case === 'upper') value = value.toUpperCase();
-    if (transform.case === 'lower') value = value.toLowercase();
-    if (transform.case === 'ucfirst') throw('todo');
-    if (transform.case === 'lcfirst') throw('todo');
+    if (transform.case === 'upper')   value = value.toUpperCase();
+    if (transform.case === 'lower')   value = value.toLowerCase();
+    if (transform.case === 'ucfirst') value = value.charAt(0).toUpperCase() + value.slice(1);
+    if (transform.case === 'lcfirst') value = value.charAt(0).toLowerCase() + value.slice(1);
+
     return value;
 }
 
-function validate(schema, value){
-    value = transform(scheme, value);
+export function validate(schema, value){
+    const string = value.toString(); // string representation
+    //value = transform(scheme, value);
     if (!(schema.required) && value==='') return; // is this ok? if not required value can always be '' ???
     //if ((schema.pattern??0) && !preg_match('/'.schema.pattern.'/', value)) return 'Pattern does not match';
-    if (schema.required && value==='') return 'Required';
-    if (schema.maxlength!==undefined && strlen(value) > schema.maxlength) return 'Too long';
-    if (schema.type === 'email' && !filter_var(value, FILTER_VALIDATE_EMAIL)) return 'Email is not valid';
-    if (schema.type === 'number') {
+    if (schema.required && string==='') return 'required';
+    console.log(schema.maxlength)
+    if (schema.maxLength !== undefined && string.length > schema.maxLength) return 'maxLength';
+    if (schema.format === 'email' && string.match(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/)) return 'format';
+    if (schema.format === 'number') {
         value = parseFloat(value);
-        if (schema.min !== undefined && value < schema.min) return 'Too small';
-        if (schema.max||0 && value > schema.max) return 'Too big';
+        if (schema.min !== undefined && value < schema.min) return 'min';
+        if (schema.max||0 && value > schema.max) return 'max';
     }
-    if (schema.type === 'date') {
+    if (schema.format === 'date') {
         if (isset(schema.min) && strtotime(value) < strtotime(schema.min)) return 'Too small';
         if (isset(schema.max) && strtotime(value) < strtotime(schema.max)) return 'Too big';
     }
-    if (schema.type === 'select') {
+    if (schema.format === 'select') {
         $options = schema.options;
         $assoc = array_keys($options) !== range(0, count($options) - 1);
         if ($assoc  && !isset($options[value])) return 'Not in options';
@@ -39,14 +42,19 @@ function validate(schema, value){
     }
 }
 
-function complete(schema) {
+export function complete(schema) {
+    if (!schema.transform) schema.transform = {};
     //deepMixin(typeDefaults[schema.type], schema); // todo
     Object.assign(schema, typeDefaults[schema.type]);
-    return;
-    for (name in typeDefaults[schema.type]) {
-        let value = typeDefaults[type];
-        if (schema[name] === undefined ) schema[name] = value; // todo, make a copy of objects
+
+    // format
+    if (schema.format === 'email' && schema.transform.trim === undefined) {
+        schema.transform.trim = true;
     }
+    if (schema.format === 'email' && schema.transform.case === undefined) {
+        schema.transform.case = 'lower';
+    }
+    if (!schema.htmlInput) schema.htmlInput = {};
 }
 
 const typeDefaults = {
@@ -95,7 +103,19 @@ const typeDefaults = {
         sql: {type:'double'},
     },
     string: {
-        htmlInput: {type: 'input'},
+        htmlInput: {type: 'text'},
         sql: {type:'text'},
     },
+    bool: {
+        htmlInput: {type: 'checkbox'},
+        sql: {type:'text', length:1},
+    },
+}
+
+export function hints(schema) {
+    var hints = []
+    if (schema.transform.case === 'ucfirst' && !schema.transform.trim) {
+        hints.push('you want to add trim if you use ucfirst');
+    }
+    return hints;
 }

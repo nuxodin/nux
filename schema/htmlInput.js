@@ -1,11 +1,12 @@
+import {complete} from "./schema.js";
 
 function htmlComplete(schema){
     const ud = undefined;
+
+    if (!schema.htmlInput) schema.htmlInput = {};
     const attr = schema.htmlInput
-    if (schema.type === 'bool' && attr.type === ud) {
-        attr.type = 'checkbox';
-    }
-    const mappable = ['patter', 'required'];
+    if (schema.type === 'bool' && attr.type === ud) attr.type = 'checkbox';
+    const mappable = ['patter', 'required', 'name'];
 
     if (attr.type === 'number') mappable.push('min', 'max');
     for (var prop of mappable) {
@@ -22,12 +23,14 @@ function htmlComplete(schema){
     }
 }
 
-function htmlInput(schema){
-
+export function htmlInput(schema, value){
     complete(schema);
     htmlComplete(schema);
 
     const attr = schema.htmlInput ? Object.assign({}, schema.htmlInput) : {};
+
+    attr.value = value === undefined ? '' : value;
+
     let tag = attr.tag || 'input';
     let close = false;
     let content = '';
@@ -63,7 +66,6 @@ function htmlInput(schema){
             delete attr.value;
             delete attr.type;
             delete attr.options;
-
             break;
         case 'checkbox':
             attr.checked = attr.value ? true : false;
@@ -77,6 +79,8 @@ function htmlInput(schema){
             break;
 
     }
+    if (attr.value==='') delete attr.value;
+
     const htmAttr = [];
     for (let name in attr) {
         let value = attr[name];
@@ -84,11 +88,11 @@ function htmlInput(schema){
         if (value === true) {
             htmAttr.push(name);
         } else {
-            // if (preg_match('/^[0-9a-z_-]+$/i', value)) { // todo: better regexp
-            // 	$attris[] = $name.'='.value;
-            // } else {
+            if (value !== '' && value.length < 100 && !value.match(/[\s"'=<>`]/)) { // is this the task of a minimizer?
+                htmAttr.push(name + '=' + value);
+            } else {
                 htmAttr.push(name + '="' + hee(value) + '"');
-            // }
+            }
         }
     }
     if (content) close = true;
