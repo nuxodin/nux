@@ -1,12 +1,8 @@
-import { serve } from "https://deno.land/std/http/server.ts"import { getNuxRequest } from "../../nux_app/request"
-import { LoggerConfig } from "https://deno.land/x/std/log/mod.ts"import { appendFile } from "fs"
-import { Hash } from "crypto"
-export var privileges = [db, schema, ]
 
 export const schema = {
     db:{items:{usr:{items:{
         id:{
-            type: 'Uint32',
+            format: 'uint32',
             index: 'primary',
         },
         username:{
@@ -20,14 +16,16 @@ export const schema = {
             maxLenght: 50,
             transform: {
                 trim:true,
-                case:ucfirst,
+                case:lower,
+                caseFirst:upper,
             }
         },
         lastname:{
             maxLenght: 50,
             transform: {
                 trim:true,
-                case:ucfirst,
+                case:lower,
+                caseFirst:upper,
             }
         },
     }}}}

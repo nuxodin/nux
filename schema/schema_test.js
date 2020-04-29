@@ -11,8 +11,9 @@ Deno.test(function transform(){
     var value = Schema.transform({
         transform:{
             trim:true,
-            case:'ucfirst',
-        }
+            case:'lower',
+            caseFirst:'upper',
+    }
     }, '  abcd ');
     assertEquals(value, 'Abcd');
 });

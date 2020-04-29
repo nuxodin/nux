@@ -1,82 +1,72 @@
-import DB from "file:D://workspace/github/nux_db/DB.js";
-import {getNuxRequest} from "file:D://workspace/github/nux_app/request.js";
-import {server as FileServer} from 'https://raw.githubusercontent.com/nuxodin/nux_file_server/master/server.js';
-import { serve } from "./user";
-import { schema } from "./user";
+import {mixin} from "../util/js.js";
+import {serve} from "https://deno.land/std@v0.41.0/http/server.ts";
+import {getNuxRequest} from "../request/request.js";
 
 
-
-export class NuxApp extends NuxEventTarget {
-	constructor(options={}){
-		this.options = Object.assign(defaults, options);
+export class NuxApp extends EventTarget {
+	constructor(config={}){
+        super();
+		//this.config = Object.assign(defaults, config);
         this.config = config;
-        const client = await new MysqlClient().connect(this.config.db);
-        this.db = new DB(client);
-	}
-	listen(){
-		for await (let denoRequest of serve(":"+this.options.port)) {
-            var req = getNuxRequest(denoRequest);
-            req.nuxApp = this;
-			await req.initSession();
-
-            var event = new CustomEvent('fetch', req);
-			this.fire(event);
-
-            var result = this._moduleServe(req);
-            if (result) {
-                req.respond();
-                continue;
-            }
-
-			let body = req.url;
-			req.respond({ body });
+        this.modules = {};
+    }
+	async start(port){
+        for await (const denoRequest of serve(":"+port)) {
+            var response = await this.serve(denoRequest);
+            denoRequest.respond(response);
 		}
     }
-    _moduleServe(req){
-        for (let exports in this.modules) {
+    async serve(denoRequest){
+        var req = getNuxRequest(denoRequest);
+        req.nuxApp = this;
+        //await req.initSession();
+        //var event = new CustomEvent('fetch', req);
+        //this.dispatchEvent(event);
+        await this._moduleServe(req);
+        return req.createResponse();
+    }
+    async _moduleServe(req){
+        for (let module in this.modules) {
+            let exports = this.modules[module];
             if (!exports.serve) continue;
             for (let pattern in exports.serve) {
-                if (!req.match(pattern)) continue;
-                var result = await exports.serve[pattern](req);
-                if (result !== undefined) return result;
+                var matchesPattern = pattern === '*' || 0;
+                //if (!req.match(pattern)) continue;
+                if (!matchesPattern) continue;
+                var stop = await exports.serve[pattern](req);
+                if (stop !== undefined) return;
             }
         }
     }
-    async need(module){
-        var exports = await import(module);
-        this.modules[module] = exports;
+    async need(module) {
+        var exports = await module;
+        if (exports.init) await exports.init(this);
+        this.modules[exports.namespace] = exports;
     }
     init() {
         this.schema = {};
-        for (exports in this.modules) {
-            js.mixin(exports.scheme, this.scheme, {ifNot:true});
+        for (let module in this.modules) {
+            let exports = this.modules[module];
+            if (!exports.schema) continue;
+            mixin(exports.schema, this.schema, false, true);
         }
-        //parseSchema()
+        for (let module in this.modules) {
+            let exports = this.modules[module];
+            if (!exports.prepare) continue;
+            exports.prepare(this);
+        }
     }
-}
-
-
-class NuxEventTarget extends EventTarget {
-	on(event, options){
-		return this.addEventListener(event, options);
-	}
-	off(event, options) {
-		return this.removeEventListener(event, options);
-	}
-	fire(event) {
-		this.dispatchEvent(event);
-	}
 }
 
 
 
 /*
 app = new NuxApp({port:90});
-app.on('fetch',function(e){
+app.addEventListener('fetch',function(e){
 	e.req.response('asdf');
 	e.stopImmediatePropagation();
 });
-app.on('fetch',function(e){
+app.addEventListener('fetch',function(e){
 	e.waitUntil(async ()=>{
 		await fileServer.listen(e.req);
 	});

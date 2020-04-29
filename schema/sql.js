@@ -1,10 +1,15 @@
+import * as Schema from "./schema.js";
+import { mixin } from "../util/js.js";
+
+
 /*
 {
-    name: 'usr_id',
+    format: 'Uint16',
+    type: 'number',
     required: true,
     slq: {
-        colation: 'utf8',
-        parent: {
+        charset: 'utf8',
+        $parent: {
             table:'usr',
             field:'id',
             onDelete:'cascade',
@@ -13,7 +18,6 @@
     }
 }
 */
-
 
 const types = {
     CHAR:      {hasLength:true,  isDate:false, isString:true,  isNumber:false},
@@ -49,49 +53,84 @@ const specials = ['','BINARY','UNSIGNED','UNSIGNED ZEROFILL','ON UPDATE CURRENT_
 const defaultKeys = {'NULL':1, 'CURRENT_TIMESTAMP':1, 'CURRENT_TIMESTAMP()':1, 'NOW()':1, 'LOCALTIME':1, 'LOCALTIME()':1, 'LOCALTIMESTAMP':1, 'LOCALTIMESTAMP()':1};
 
 
-function to_column_definition(schema) {
-    const data = schema.sql;
-    let {
-        type          = 'varchar',
-        length        = false,
-        special       = '',
-        collate       = false,
-        $null         = false,
-        autoincrement = false,
-        $default      = false,
-    } = data;
-    type    = trim(strtoupper(type));
-    special = trim(strtoupper(special));
-    if (!types[type]) throw('field special "' + special + +'" not allowed');
-    if (!special.includes(special)) throw('field special "' + special + +'" not allowed');
-    // length
-    length = length ? '('+length+')' : '';
-    if (!types[type].hasLength) length = '';
-    if (type === 'VARCHAR' && !length) length = '(191)';
-    if (type === 'DECIMAL' && length > 65) length = '(12,8)';
-    // default
-    defaultStr = '';
-    if (autoincrement) {
-        defaultStr = 'AUTO_INCREMENT';
-    } else if ($default !== false) {
-        defaultStr = "DEFAULT " + (defaultKeys[$default] !== undefined) ? $default : '"'+escapeString($default)+'"';
+
+function fieldSchemaToData(schema){
+    Schema.complete(schema);
+
+    var data = mixin(formatDefaults[schema.format]);
+    mixin({special:'', type:'varchar'}, data);
+
+    switch (schema.type) {
+        case 'date':
+            data.type = 'datetime';
+            break;
     }
+    switch (schema.charset) {
+        case 'ascii':
+            data.collate = 'ascii_general_ci';
+            //utf8mb4_german2_ci
+            break;
+        default:
+            data.collate = 'utf8mb4_general_ci';
+            break;
+    }
+    if (schema.maxLength !== undefined) {
+        data.length = schema.maxLength;
+    }
+    if (schema.required !== undefined) {
+        data.null = !schema.required;
+    }
+    if (schema.$autoincrement !== undefined) {
+        data.autoincrement = schema.$autoincrement;
+        data.null = !schema.required;
+    }
+    schema.sql && mixin(schema.sql, data, true);
+    return data;
+}
+export function to_column_definition(schema) {
+    const data = fieldSchemaToData(schema);
+    data.type    = data.type.toUpperCase();
+    data.special = data.special.toUpperCase();
+    if (!types[data.type]) throw('field type "' + data.special + +'" not allowed');
+    if (!specials.includes(data.special)) throw('field special "' + data.special + +'" not allowed');
+    if (data.special === 'UNSIGNED') {
+        if (!data.type.endsWith('INT')) data.special = '';
+    }
+
+
+    // length
+    let lengthStr = data.length ? '('+data.length+')' : '';
+    if (!types[data.type].hasLength) lengthStr = '';
+    if (data.type === 'VARCHAR' && !lengthStr) lengthStr = '(191)';
+    if (data.type === 'DECIMAL' && data.length > 65) lengthStr = '(12,8)';
+    // default
+    let defaultStr = '';
+    if (data.autoincrement) {
+        defaultStr = 'AUTO_INCREMENT';
+    } else if (data.default !== undefined) {
+        defaultStr = "DEFAULT " + (defaultKeys[data.default] !== undefined ? data.default : '"'+escapeString(data.default)+'"');
+    }
+
     // colate
     let collateStr = '';
-    if (types[type].isNumber || types[type].isDate) collate = false;
-    if (collate) {
-        let characterSet = collate.split('_')[0];
-        collateStr = "CHARACTER SET " + characterSet + " COLLATE " + collate + " ";
+    if (types[data.type].isNumber || types[data.type].isDate) data.collate = false;
+    if (data.collate) {
+        let characterSet = data.collate.split('_')[0];
+        collateStr = "CHARACTER SET " + characterSet + " COLLATE " + data.collate + " ";
     }
     // null
-    const nullStr = ($null ? 'NULL' : 'NOT NULL');
+    const nullStr = (data.null ? 'NULL' : 'NOT NULL');
 
-    return data.type + length + " " + special + " " + collateStr + " " + nullStr + " " + defaultStr;
+    return data.type + lengthStr + " " + data.special + " " + collateStr + " " + nullStr + " " + defaultStr;
 }
 
-function alertSql(table, field, schema) {
+export function alterSql(table, field, schema) {
     return "ALTER TABLE `" + table + "` CHANGE `" + field + "` `" + field + "` " + to_column_definition(schema);
 }
+export function createSql(table, field, schema) {
+    return "ALTER TABLE `" + table + "` ADD `" + field + "` " + to_column_definition(schema);
+}
+
 
 function escapeString(str) {
     return str.replace(/"/g, '\\"'); // todo, how secure is this?
@@ -151,4 +190,61 @@ function information_schema_columns_entry_to_schema(dbField) {
         extra:    dbField.EXTRA,
         charset:  dbField.CHARACTER_SET_NAME,
     }
+}
+
+
+
+
+
+const formatDefaults = {
+    int8: {
+        type:'tinyint',
+    },
+    uint8: {
+        type:'tinyint',
+        special:'unsigned',
+    },
+    int16: {
+        type:'mediumint',
+    },
+    uint16: {
+        type:'mediumint',
+        special:'unsigned',
+    },
+    int32: {
+        type:'int',
+    },
+    uint32: {
+        type:'int',
+        special:'unsigned',
+    },
+    int64: {
+        type:'bigint',
+    },
+    uint64: {
+        type:'bigint',
+        special:'unsigned',
+    },
+    float32: {
+        type:'float',
+    },
+    float64: {
+        type:'double',
+    },
+    'date-time': {
+        type:'datetime',
+    },
+    date: {
+        type:'date',
+    },
+    time: {
+        type:'time',
+    },
+    email: {
+        type:'varchar',
+        length: 120,
+    },
+    json: {
+        type:'text',
+    },
 }

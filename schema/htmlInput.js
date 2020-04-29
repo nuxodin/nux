@@ -1,115 +1,76 @@
 import {complete} from "./schema.js";
+import {mixin} from "../util/js.js";
+import {htmlInput} from "../html/input.js";
 
-function htmlComplete(schema){
-    const ud = undefined;
+function toHtmlInputSchema(schema){
+    console.log(schema);
+    complete(schema);
+    const attr = mixin(formatDefaults[schema.format]);
 
-    if (!schema.htmlInput) schema.htmlInput = {};
-    const attr = schema.htmlInput
-    if (schema.type === 'bool' && attr.type === ud) attr.type = 'checkbox';
+    console.log(schema.format);
+    console.log(attr);
+
+    if (schema.type === 'bool' && attr.type === undefined) attr.type = 'checkbox';
     const mappable = ['patter', 'required', 'name'];
-
     if (attr.type === 'number') mappable.push('min', 'max');
     for (var prop of mappable) {
-        if (schema[prop] === ud) continue;
-        if (attr[prop] !== ud) continue;
+        if (schema[prop] === undefined) continue;
+        if (attr[prop] !== undefined) continue;
         attr[prop] = schema[prop];
     }
-
-    if (schema.maxLength !== ud && attr.maxlength === ud) {
+    if (schema.maxLength !== undefined && attr.maxlength === undefined) {
         attr.maxlength = schema.maxLength;
     }
-    if (schema.multipleOf !== ud && attr.steps === ud) {
+    if (schema.multipleOf !== undefined && attr.steps === undefined) {
         attr.steps = schema.multipleOf;
     }
+    schema.htmlInput && mixin(schema.htmlInput, attr);
+    return attr;
 }
 
-export function htmlInput(schema, value){
-    complete(schema);
-    htmlComplete(schema);
-
-    const attr = schema.htmlInput ? Object.assign({}, schema.htmlInput) : {};
-
-    attr.value = value === undefined ? '' : value;
-
-    let tag = attr.tag || 'input';
-    let close = false;
-    let content = '';
-    switch (attr.type) {
-        case 'textarea':
-            tag = 'textarea';
-            close = true;
-            content = hee(attr.value);
-            delete attr.value;
-            delete attr.type;
-            break;
-        case 'select':
-            tag = 'select';
-            close = true;
-            const options = schema.options;
-            let oneSelected = false;
-            if (Array.isArray(options)) {
-                for (let option of options) {
-                    let selected = value === options ? ' selected' : '';
-                    if (selected !== '') oneSelected = true;
-                    content += '<option' + (selected)+'>' + hee(option);
-                }
-            } else {
-                for (let [key, value] of Object.entries(options)) {
-                    let selected = value === options ? ' selected' : '';
-                    if (selected !== '') oneSelected = true;
-                    content += '<option' + (selected)+' value="' + hee(key) + '">' + hee(option);
-                }
-            }
-            if (!oneSelected && attr.value === undefined) { // actual value not in options
-                content += '<option selected>' + hee(attr.value);
-            }
-            delete attr.value;
-            delete attr.type;
-            delete attr.options;
-            break;
-        case 'checkbox':
-            attr.checked = attr.value ? true : false;
-            attr.value = '1'; // new ok?
-            break;
-        case 'datetime-local':
-            attr.value = str_replace(' ','T',attr.value);
-            attr.value = preg_replace('/:00$/', '', attr.value);
-            attr.value = attr.value.replace(' ', 'T');
-            attr.value = attr.value.replace(/:00$/, '');
-            break;
-
-    }
-    if (attr.value==='') delete attr.value;
-
-    const htmAttr = [];
-    for (let name in attr) {
-        let value = attr[name];
-        if (value === false) continue;
-        if (value === true) {
-            htmAttr.push(name);
-        } else {
-            if (value !== '' && value.length < 100 && !value.match(/[\s"'=<>`]/)) { // is this the task of a minimizer?
-                htmAttr.push(name + '=' + value);
-            } else {
-                htmAttr.push(name + '="' + hee(value) + '"');
-            }
-        }
-    }
-    if (content) close = true;
-    return '<' + tag + ' ' + htmAttr.join(' ') +  '>' + (content ? content : '') + (close ? '</' + tag + '>':'');
+export function tohtmlInput(schema, value){
+    const attr = toHtmlInputSchema(schema);
+    return htmlInput(attr, value);
 }
 
-function hee(str){
-    return (str+'').replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
-        return '&#'+i.charCodeAt(0)+';';
-    });
+const formatDefaults = {
+    int8: {
+        type:'number',
+    },
+    uint8: {
+        type:'number',
+    },
+    int16: {
+        type:'number',
+    },
+    uint16: {
+        type:'number',
+    },
+    int32: {
+        type:'number',
+    },
+    uint32: {
+        type:'number',
+    },
+    float32: {
+        type:'number',
+    },
+    float64: {
+        type:'number',
+    },
+    'date-time': {
+        type:'datetime-local',
+    },
+    date: {
+        type:'date',
+    },
+    time: {
+        type:'time',
+    },
+    email: {
+        type:'email',
+    },
+    json: {
+        type:'textarea',
+    },
 }
-
-/*
-var x = htmlInput({
-    type:'string',
-    maxLength:33,
-    pattern:'[0-9]+',
-})
-console.log(x)
-*/
