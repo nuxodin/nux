@@ -1,5 +1,389 @@
 import { mixin } from '../util/js.js';
 
+export class Schema {
+    constructor(schema){
+        for (let i in schema) this[i] = schema[i];
+    }
+    transform (value) {
+        for (let [prop, descriptor] of Object.entries(properties)) {
+            if (!descriptor.transform) continue; // property does not transform value
+            const propValue = this[prop];
+            if (propValue === undefined) continue; // property not set
+            var newValue = descriptor.transform(propValue, value);
+            if (newValue !== undefined) value = newValue;
+        }
+        const error = this.error(value);
+        if (error) throw Error(error);
+        return value;
+    }
+    *errors (value){
+        for (let prop in properties) {
+            const descriptor = properties[prop];
+            if (!descriptor.validate) continue;
+            const propValue = this[prop];
+            if (propValue === undefined) continue; // property not set
+            if (!descriptor.validate(propValue, value)) {
+                yield `"${value}" does not match ${prop}:${propValue}`;
+            }
+        }
+    }
+    error(value) {
+        for (let error of this.errors(value)) return error;
+        return false;
+    }
+    validate(value) {
+        return !this.error(value);
+    }
+    schemaError(){
+        let lastError = false
+        for (let prop in properties) {
+            const descriptor = properties[prop];
+            if (!descriptor.schemaError) continue;
+            let propValue = this[prop];
+            if (propValue === undefined) continue; // property not set
+            const error = descriptor.schemaError(propValue, this);
+            if (error) {
+                lastError = `schema error: ${prop}:"${propValue}" with error:`+error;
+                console.warn(error);
+            }
+        }
+        return lastError;
+    }
+    toJSON(){
+        const obj = {};
+        for (let i in this) obj[i] = this[i];
+        return obj;
+    }
+}
+
+
+const properties = {
+    title:{},
+    description:{},
+    default:{
+        schemaError: (def, schema) => schema.error(def),
+        todo_transform: (def, value) => {
+            if (value === null || value) return def;
+        },
+    },
+    examples:{ // useful for autocomplete?
+        schemaError: (exampels, schema) => exampels.filter(item => schema.error(item)),
+    },
+    enum: {
+        validate: (allowed, value) => allowed.includes(value),
+        schemaError: (allowed, schema) => allowed.filter(item => schema.error(item)),
+    },
+    type:{
+        transform(propValue, value) {
+            if (propValue === 'string' && typeof value !== 'string' && value.toString) return value.toString();
+            if (propValue === 'number' && typeof value !== 'number') return parseFloat(value);
+            if (propValue === 'integer' && !Number.isInteger(value)) return parseInt(value);
+            if (propValue === 'boolean' && typeof value !== 'boolean') return !!value;
+        },
+        validate(propValue, value) {
+            if (propValue === 'object'  && typeof value === 'object') return true;
+            if (propValue === 'integer' && Number.isInteger(value)) return true;
+            if (propValue === 'number'  && typeof value === 'number' && isFinite(value)) return true;
+            if (propValue === 'boolean' && typeof value === 'boolean') return true;
+            if (propValue === 'string'  && typeof value === 'string') return true;
+        },
+        options: {
+            string: {
+            },
+            number: {
+                defaults: {
+                    format:'float32',
+                }
+            },
+            integer: {
+                defaults: {
+                    format:'int32'
+                }
+            },
+            boolean: {},
+            object: {},
+            array: {},
+        }
+    },
+    format: {
+        options: {
+            int8: {
+                defaults: {
+                    type:'integer',
+                    min: 0,
+                    max:255,
+                    multipleOf:1,
+                }
+            },
+            uint8: {
+                defaults: {
+                    type:'integer',
+                    min: -128,
+                    max:127,
+                    multipleOf:1,
+                },
+            },
+            int16: {
+                defaults: {
+                    type:'integer',
+                    min: -32768,
+                    max:32767,
+                    multipleOf:1,
+                },
+            },
+            uint16: {
+                defaults: {
+                    type:'integer',
+                    min: 0,
+                    max:65535,
+                    multipleOf:1,
+                },
+            },
+            int32: {
+                defaults: {
+                    type:'integer',
+                    min: -2147483648,
+                    max:2147483647,
+                    multipleOf:1,
+                },
+            },
+            uint32: {
+                defaults: {
+                    type:'integer',
+                    min: 0,
+                    max:4294967295,
+                    multipleOf:1,
+                },
+            },
+            float32: {
+                defaults: {
+                    type:'number',
+                },
+            },
+            float64: {
+                defaults: {
+                    type:'number',
+                },
+            },
+            'date-time': {
+                defaults: {
+                    type:'string',
+                },
+            },
+            date: {
+                defaults: {
+                    type:'string',
+                },
+            },
+            time: {
+                defaults: {
+                    type:'string',
+                },
+            },
+            email: {
+                defaults: {
+                    type:'string',
+                    length: 120,
+                    transformTrim: true,
+                    transformCase: 'lower',
+                },
+            },
+        },
+    },
+    min:{
+        type:'integer',
+        validate: (min, value) => value >= min,
+    },
+    max:{
+        type:'integer',
+        validate: (max, value) => value <= max,
+    },
+    minLength:{
+        type:'integer',
+        validate: (minLen, value) => value.length >= minLen,
+    },
+    maxLength:{
+        type:'integer',
+        validate: (maxLen, value) => value.length <= maxLen,
+    },
+    multipleOf:{
+        type:'number',
+        validate: (propValue, value) => value % propValue === 0,
+    },
+    pattern:{
+        validate: (pattern, value) => {
+            try { return new RegExp(pattern).test(value); } catch { return true; }
+        },
+        schemaError: (pattern)=>{
+            try { RegExp(pattern).test('test'); } catch (e) { return e.message; }
+        }
+    },
+
+    /* custom */
+    transformTrim:{
+        transform(propValue, value){
+            switch (propValue){
+                case 'left':  return value.trimLeft();
+                case 'right': return value.trimRight();
+                default:      return value.trim();
+            }
+        }
+    },
+    transformCase:{
+        transform(propValue, value){
+            if (propValue === 'upper') return value.toUpperCase();
+            if (propValue === 'lower') return value.toLowerCase();
+        }
+    },
+    transformCaseFirst:{
+        transform(propValue, value){
+            if (propValue === 'upper') return value.charAt(0).toUpperCase() + value.slice(1);
+            if (propValue === 'lower') return value.charAt(0).toLowerCase() + value.slice(1);
+        }
+    },
+    colAutoincrement:{
+        options: {
+            [true]: {
+                defaults: {
+                    format:'uint32',
+                    colIndex:'primary',
+                }
+            },
+            [false]: {}
+        }
+    },
+    colIndex:{
+        options: {
+            [true]: {},
+            'unique': {},
+            'primary': {},
+        }
+    },
+}
+
+// A hell of a lot of code not to cause reqursion, is that easier?
+const tmpValsMap = new WeakMap();
+
+
+for (let requestedProp in properties) {
+    Object.defineProperty(Schema.prototype, requestedProp, {
+        get(){
+            // prevent reqursion: save getter requested values temporary
+            if (!tmpValsMap.has(this)) {
+                var startedHere = true;
+                tmpValsMap.set(this, {});
+            }
+            var tmpVals = tmpValsMap.get(this);
+            if (requestedProp in tmpVals) {
+                return tmpVals[requestedProp];
+            }
+            tmpVals[requestedProp] = undefined; // if it has a value it will set it later
+
+            // get defaults
+            // todo: first loop own properties then all?
+            for (let otherProp in this) { // loop other properties (getter)
+                if (requestedProp === otherProp) continue; // requested Property
+                const options = properties[otherProp]?.options;
+                if (!options) continue;
+                const otherPropValue = this[otherProp];
+                if (otherPropValue === undefined) continue;
+                const val = options[otherPropValue]?.defaults?.[requestedProp];
+
+                tmpVals[requestedProp] = val; // prevent reqursion
+
+                if (val !== undefined) {
+                    if (startedHere) tmpValsMap.delete(this); // prevent reqursion
+                    return val;
+                }
+            }
+            if (startedHere) tmpValsMap.delete(this); // prevent reqursion
+        },
+        set(value){
+            if (properties[requestedProp].options) {
+                if (!properties[requestedProp].options[value]) {
+                    console.warn('warning: "'+value+'" is not allowed as "'+requestedProp)+'"';
+                }
+            }
+            Object.defineProperty(this, requestedProp, {
+                value,
+                configurable:true,
+                enumerable:true,
+            })
+        },
+        configurable:true,
+        enumerable:true,
+    });
+}
+
+
+
+
+
+const formatDefaults = {
+    int8: {
+        type:'integer',
+        min: 0,
+        max:255,
+        multipleOf:1,
+    },
+    uint8: {
+        type:'integer',
+        min: -128,
+        max:127,
+        multipleOf:1,
+    },
+    int16: {
+        type:'integer',
+        min: -32768,
+        max:32767,
+        multipleOf:1,
+    },
+    uint16: {
+        type:'integer',
+        min: 0,
+        max:65535,
+        multipleOf:1,
+    },
+    int32: {
+        type:'integer',
+        min: -2147483648,
+        max:2147483647,
+        multipleOf:1,
+    },
+    uint32: {
+        type:'integer',
+        min: 0,
+        max:4294967295,
+        multipleOf:1,
+    },
+    float32: {
+        type:'number',
+    },
+    float64: {
+        type:'number',
+    },
+    'date-time': {
+        type:'string',
+    },
+    date: {
+        type:'string',
+    },
+    time: {
+        type:'string',
+    },
+    email: {
+        type:'string',
+        length: 120,
+        transformTrim: true,
+        transformCase: 'lower',
+        transform:{trim:true, case:'lower'}
+    },
+    json: {
+        type:'string',
+    },
+}
+
+
 export function transform(scheme, value) {
     const transform = scheme.transform;
     if (transform.trim) {
@@ -51,17 +435,8 @@ export function validate(schema, value){
 
 export function complete(schema) {
     if (!schema.transform) schema.transform = {};
-
     mixin(formatDefaults[schema.format], schema, false, true);
-    mixin(typeDefaults[schema.type], schema, false, true);
-
-    // format
-    if (schema.format === 'email' && schema.transform.trim === undefined) {
-        schema.transform.trim = true;
-    }
-    if (schema.format === 'email' && schema.transform.case === undefined) {
-        schema.transform.case = 'lower';
-    }
+    //mixin(typeDefaults[schema.type], schema, false, true);
     if (!schema.htmlInput) schema.htmlInput = {};
     return schema;
 }
@@ -69,68 +444,7 @@ export function complete(schema) {
 const typeDefaults = {
     bool: {
         htmlInput: {type: 'checkbox'},
-        sql: {type:'text', length:1},
-    },
-}
-const formatDefaults = {
-    int8: {
-        type:'number',
-        min: 0,
-        max:255,
-        multipleOf:1,
-    },
-    uint8: {
-        type:'number',
-        min: -128,
-        max:127,
-        multipleOf:1,
-    },
-    int16: {
-        type:'number',
-        min: -32768,
-        max:32767,
-        multipleOf:1,
-    },
-    uint16: {
-        type:'number',
-        min: 0,
-        max:65535,
-        multipleOf:1,
-    },
-    int32: {
-        type:'number',
-        min: -2147483648,
-        max:2147483647,
-        multipleOf:1,
-    },
-    uint32: {
-        type:'number',
-        min: 0,
-        max:4294967295,
-        multipleOf:1,
-    },
-    float32: {
-        type:'number',
-    },
-    float64: {
-        type:'number',
-    },
-    'date-time': {
-        type:'string',
-    },
-    date: {
-        type:'string',
-    },
-    time: {
-        type:'string',
-    },
-    email: {
-        type:'string',
-        length: 120,
-        transform:{trim:true}
-    },
-    json: {
-        type:'string',
+        sql: {type:'varchar', length:1},
     },
 }
 

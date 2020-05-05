@@ -12,3 +12,27 @@ export function mixin(src, target, force, deep) {
     }
     return target;
 };
+
+
+/**
+ * Wraps the Object in a Proxy to allow autovivification
+ * @param {object} variable - Object to autoviv
+ * @example
+ *   var obj = {};
+ *   autoviv(obj).x.y.z = {};
+ *   console.log(obj)
+ * @return {void}
+ */
+
+var autoviv = function(variable){
+	return new Proxy(variable, {
+      get: function(target, name) {
+        if (name in target) {
+        	return target[name];
+        } else {
+          target[name] = Object.create(null);
+          return autoviv(target[name])
+        }
+      }
+   })
+}

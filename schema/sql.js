@@ -1,20 +1,15 @@
 import * as Schema from "./schema.js";
 import { mixin } from "../util/js.js";
 
-
 /*
 {
     format: 'Uint16',
     type: 'number',
     required: true,
+    colParent:'usr'
+    colParentField:
     slq: {
         charset: 'utf8',
-        $parent: {
-            table:'usr',
-            field:'id',
-            onDelete:'cascade',
-            onCopy:'cascade',
-        }
     }
 }
 */
@@ -54,12 +49,46 @@ const defaultKeys = {'NULL':1, 'CURRENT_TIMESTAMP':1, 'CURRENT_TIMESTAMP()':1, '
 
 
 
+function foraignSchema(dbSchema, targetTable, targetField=undefined) {
+    if (targetField) return dbSchema.properties[targetTable].properties[targetField];
+    const primaries = [];
+    for (let [field, fieldSchema] of Object.entries(dbSchema.properties[targetTable].properties)) {
+        if (fieldSchema.colIndex === 'primary') primaries.push(fieldSchema);
+    }
+    if (primaries.length === 1) return primaries[0];
+}
+
+export function completeDbScheme(dbSchema) {
+    for (let [table, schema] of Object.entries(dbSchema.properties)) {
+        for (let [field, fieldSchema] of Object.entries(schema.properties)) {
+            if (fieldSchema.colAutoincrement) {
+                if (fieldSchema.colIndex === undefined) fieldSchema.colIndex = 'primary';
+                if (fieldSchema.format === undefined) fieldSchema.format = 'uint32';
+            }
+        }
+    }
+    for (let [table, schema] of Object.entries(dbSchema.properties)) {
+        for (let [field, fieldSchema] of Object.entries(schema.properties)) {
+            if (fieldSchema.colParent) {
+                var fSchema = foraignSchema(dbSchema, fieldSchema.colParent, fieldSchema.colParentField);
+                if (fSchema) {
+                    fSchema = mixin(fSchema);
+                    delete fSchema.colIndex;
+                    delete fSchema.colAutoincrement;
+                    mixin(fSchema, fieldSchema);
+                    //if (!fieldSchema.format) fieldSchema.format = fSchema.format;
+                }
+            }
+            Schema.complete(fieldSchema);
+        }
+    }
+}
+
+
 function fieldSchemaToData(schema){
     Schema.complete(schema);
-
     var data = mixin(formatDefaults[schema.format]);
     mixin({special:'', type:'varchar'}, data);
-
     switch (schema.type) {
         case 'date':
             data.type = 'datetime';
@@ -80,8 +109,8 @@ function fieldSchemaToData(schema){
     if (schema.required !== undefined) {
         data.null = !schema.required;
     }
-    if (schema.$autoincrement !== undefined) {
-        data.autoincrement = schema.$autoincrement;
+    if (schema.colAutoincrement !== undefined) {
+        data.autoincrement = schema.colAutoincrement;
         data.null = !schema.required;
     }
     schema.sql && mixin(schema.sql, data, true);
@@ -135,65 +164,6 @@ export function createSql(table, field, schema) {
 function escapeString(str) {
     return str.replace(/"/g, '\\"'); // todo, how secure is this?
 }
-
-
-
-const indexTranslate = {
-    PRI: 'primariy',
-    UNI: 'unique',
-    MUL: true,
-}
-const typeTranslate = {
-    'tinyint':'int8',
-    'smallint':'int16',
-    'int':'int32',
-    'bigint':'int64',
-    'varchar':'string',
-    'text':'string',
-    'tinytext':'string',
-}
-export async function schemaFromDb(db) {
-    var all = await db.query("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA = '"+db.conn.config.db+"' ");
-    let schema = {
-        items:{},
-        name:db.conn.config.db,
-    };
-    for (let dbTable of all) {
-        let tableSchema = schema.items[dbTable.TABLE_NAME] = {};
-        tableSchema.items = {};
-        tableSchema.name = dbTable.TABLE_NAME;
-        tableSchema.defaults = {
-            charset: dbTable.TABLE_COLLATION.replace(/_.+/,''),
-        };
-
-        let fields = await db.query("SELECT * FROM information_schema.COLUMNS WHERE table_schema = '"+db.conn.config.db+"' AND table_name = '"+dbTable.TABLE_NAME+"' ORDER BY ORDINAL_POSITION");
-        tableSchema.items = {};
-        for (let dbField of fields) {
-            tableSchema.items[dbField.COLUMN_NAME] = information_schema_columns_entry_to_schema(dbField);
-        }
-    }
-    return schema;
-}
-
-function information_schema_columns_entry_to_schema(dbField) {
-    let unsigned = dbField.COLUMN_TYPE.match(/ unsigned/,'') ? 'u':'';
-    let type = unsigned+typeTranslate[ dbField.DATA_TYPE ];
-    type = type[0].toUpperCase() + type.slice(1);
-    let length = parseInt(dbField.CHARACTER_MAXIMUM_LENGTH);
-    return {
-        name:     dbField.COLUMN_NAME,
-        type,
-        length,
-        required: dbField.IS_NULLABLE === 'NO' ? true: false,
-        index:    indexTranslate[dbField.COLUMN_KEY],
-        default:  dbField.COLUMN_DEFAULT,
-        extra:    dbField.EXTRA,
-        charset:  dbField.CHARACTER_SET_NAME,
-    }
-}
-
-
-
 
 
 const formatDefaults = {

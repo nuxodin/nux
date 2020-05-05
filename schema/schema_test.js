@@ -1,50 +1,98 @@
+const { test } = Deno;
 import {
     assertEquals,
     assertThrows,
     assertThrowsAsync,
     assert,
-} from "https://deno.land/std/testing/asserts.ts";
+} from "https://deno.land/std@v0.42.0/testing/asserts.ts";
 
-import * as Schema from './schema.js'
+import {Schema} from './schema.js'
 
-Deno.test(function transform(){
-    var value = Schema.transform({
-        transform:{
-            trim:true,
-            case:'lower',
-            caseFirst:'upper',
-    }
-    }, '  abcd ');
+await new Promise((resolve) => setTimeout(resolve, 100));
+
+
+test('transform', function transform(){
+    var schema = new Schema({
+        transformTrim:true,
+        transformCase:'lower',
+        transformCaseFirst:'upper',
+    });
+    var value = schema.transform('   abCd  ');
     assertEquals(value, 'Abcd');
 });
 
-Deno.test(function complete(){
-    var schema = {
+
+test('transform mail', function transform_email(){
+    var schema = new Schema({
         format: 'email',
-    };
-    Schema.complete(schema);
-    var value = Schema.transform(schema, '  HanS.x@SunRise.Com   ');
+    });
+    var value = schema.transform('  HanS.x@SunRise.Com   ');
     assertEquals(value, 'hans.x@sunrise.com');
 });
 
 
+test('can not transform', function transform_email(){
+    var schema = new Schema({
+        maxLength:2
+    });
+    assertThrows(()=>{
+        schema.transform('longer then 2 chars')
+    })
+});
 
 
-/*
-var schema = {
-    type:'bool'
-};
-Schema.complete(schema)
-console.log(schema)
+test('autocomplete', function autocomplete(){
+    var schema = new Schema({
+        format: 'email',
+    });
+    assertEquals(schema.type, 'string');
+});
 
-var error = Schema.validate({
-    maxLength:3
-}, 'abcd');
-console.log(error)
+test('schema_error', function schema_error(){
+    var schema = new Schema({
+        pattern: 'a(',
+    });
+    var error = schema.schemaError();
+    assertEquals(error, 'schema error: pattern:\"a(\" with error:Invalid regular expression: /a(/: Unterminated group');
+});
 
-var schema = {
-    type:'Uint8'
-};
-Schema.complete(schema)
-console.log(schema)
-*/
+test('simple object', function schema_error(){
+    var schema = new Schema({
+        type:'object',
+    });
+    const value = {
+        "key"         : "value",
+        "another_key" : "another_value"
+    }
+    assert(schema.validate(value));
+});
+
+test('not a object', function schema_error(){
+    var schema = new Schema({
+        type:'object',
+    });
+    assert(!schema.validate('Not an object'));
+});
+
+test('not a number', function schema_error(){
+    var schema = new Schema({
+        type:'number',
+    });
+    assert(!schema.validate('666'));
+});
+
+
+test('a integer', function schema_error(){
+    var schema = new Schema({
+        type:'integer',
+    });
+    assert(schema.validate(2));
+});
+
+
+test('not a integer', function schema_error(){
+    var schema = new Schema({
+        type:'integer',
+    });
+    assert(!schema.validate(2.1));
+});

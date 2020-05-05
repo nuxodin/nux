@@ -1,6 +1,7 @@
-import {mixin} from "../util/js.js";
-import {serve} from "https://deno.land/std@v0.41.0/http/server.ts";
-import {getNuxRequest} from "../request/request.js";
+import { mixin } from "../util/js.js";
+import { serve } from "https://deno.land/std@v0.42.0/http/server.ts";
+import { getNuxRequest } from "../request/request.js";
+import { ensureDir } from "../util/nuxo.js";
 
 
 export class NuxApp extends EventTarget {
@@ -8,34 +9,41 @@ export class NuxApp extends EventTarget {
         super();
 		//this.config = Object.assign(defaults, config);
         this.config = config;
+        if (!this.config.basePath) this.config.basePath = '/';
+        if (!this.config.appPath) {
+            var path = location.href.replace('file:///','')
+            this.config.appPath = path.replace(/\/[^\/]+$/, '')
+        }
+        this.config.pubPath = this.config.appPath + '/pub';
+        ensureDir(this.config.pubPath);
+
         this.modules = {};
     }
 	async start(port){
         for await (const denoRequest of serve(":"+port)) {
             var response = await this.serve(denoRequest);
-            denoRequest.respond(response);
+            if (response) denoRequest.respond(response);
 		}
     }
     async serve(denoRequest){
+        if (!denoRequest.url.startsWith(this.config.basePath)) return;
         var req = getNuxRequest(denoRequest);
+        req.appUrlPart = denoRequest.url.substr(this.config.basePath.length);
         req.nuxApp = this;
-        //await req.initSession();
+//        if (this.config.basePath)
+
+
         //var event = new CustomEvent('fetch', req);
         //this.dispatchEvent(event);
-        await this._moduleServe(req);
-        return req.createResponse();
+        await this._modulesCall('serve', req);
+        return await req.createResponse();
     }
-    async _moduleServe(req){
+    async _modulesCall(what, arg){
         for (let module in this.modules) {
             let exports = this.modules[module];
-            if (!exports.serve) continue;
-            for (let pattern in exports.serve) {
-                var matchesPattern = pattern === '*' || 0;
-                //if (!req.match(pattern)) continue;
-                if (!matchesPattern) continue;
-                var stop = await exports.serve[pattern](req);
-                if (stop !== undefined) return;
-            }
+            if (!exports[what]) continue;
+            var stop = await exports[what].call(this, arg);
+            if (stop !== undefined) return;
         }
     }
     async need(module) {
@@ -43,12 +51,13 @@ export class NuxApp extends EventTarget {
         if (exports.init) await exports.init(this);
         this.modules[exports.namespace] = exports;
     }
-    init() {
+    async init() {
         this.schema = {};
         for (let module in this.modules) {
             let exports = this.modules[module];
             if (!exports.schema) continue;
-            mixin(exports.schema, this.schema, false, true);
+            const schema = await exports.schema;
+            mixin(schema, this.schema, false, true);
         }
         for (let module in this.modules) {
             let exports = this.modules[module];

@@ -1,4 +1,4 @@
-import {Sha1} from "https://deno.land/std/ws/sha1.ts";
+import {Sha1} from "https://deno.land/std@v0.42.0/util/sha1.ts";
 
 function sha1(string){
     const sha1 = new Sha1();
@@ -6,30 +6,21 @@ function sha1(string){
     return sha1.toString();
 }
 
+export const namespace = 'sess';
 
 export async function init(nuxApp){
     nuxApp.sessionManager = new SessionManager(nuxApp.db);
 }
 
-
-export const namespace = 'sess';
-
-export const serve = {
-    '*': async req => {
-        //if (req.url === '/favicon.ico') return true;
-        console.log(req.url)
-        req.session = await req.nuxApp.sessionManager.fromRequest(req);
-        await req.session.load();
-        req.session.touch();
-
-        req.response.body += 'session-id: ' + req.session.hash;
-    },
+export async function serve(req){
+    req.session = await req.nuxApp.sessionManager.fromRequest(req);
+    await req.session.load();
+    req.session.touch();
+    req.response.body += 'session-id: ' + req.session.hash;
 }
 
-export const unserve = {
-    '*': async req => {
-        req.session.close();
-    },
+export function unserve(req) {
+    req.session.touch();
 }
 
 
@@ -112,7 +103,6 @@ class Session {
     }
     async save(){ // todo: debounce
         let json = JSON.stringify(this.data);
-        console.log('save session', this.hash);
 
         await this.manager.db.table('sess').row(this.id).set({
             data: json,
@@ -125,7 +115,6 @@ class Session {
         setTimeout(()=>this.save(), 100)
         clearTimeout(this.memoryTimeout);
         this.memoryTimeout = setTimeout(()=>{
-            console.log('remove from pool', this.hash)
             delete this.manager.pool[this.hash];
         }, this.manager.memoryMaxAge); // hold in memory for the following requests, longer?
     }
@@ -143,7 +132,7 @@ class Session {
 
 
 export const schema = {
-    db:{items:{sess:{items:{
+    db:{properties:{sess:{properties:{
         id:{
             format: 'uint32',
             $autoincrement: true,

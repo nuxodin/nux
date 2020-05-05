@@ -1,4 +1,4 @@
-import { delCookie, setCookie, getCookies } from "https://deno.land/std@v0.41.0/http/cookie.ts";
+import { delCookie, setCookie, getCookies } from "https://deno.land/std@v0.42.0/http/cookie.ts";
 
 
 export class Cookies {

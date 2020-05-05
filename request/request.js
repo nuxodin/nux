@@ -1,19 +1,18 @@
 import { Cookies } from "./cookies.js";
 import { serializeParams } from "./serializeParams.js";
 import { Csp } from "./csp.js";
-//import { Session } from "./session.js";
 //import Introspected from "https://raw.githubusercontent.com/nuxodin/introspected/master/esm/introspected.js";
 
 const requests = new WeakMap();
 
 export function getNuxRequest(denoRequest){
 	if (requests.has(denoRequest)) return requests.get(denoRequest);
-	const request = new Request(denoRequest);
+	const request = new NuxRequest(denoRequest);
 	requests.set(denoRequest, request);
 	return request;
 }
 
-class Request {
+class NuxRequest {
 	constructor(req){
 		this.ip = req.conn.remoteAddr.hostname;
 
@@ -41,10 +40,9 @@ class Request {
 		};
 		this.cookie = new Cookies(this.request);
 	}
-	createResponse(){
+	createResponse() {
 		// body
 		let body = this.response.body;
-		//if (typeof body === 'string') body = new TextEncoder().encode(body);
 		// header
 		this.response.header['Content-Security-Policy-Report-Only'] = this.response.csp_report.toString();
 		this.response.header['Content-Security-Policy'] = this.response.csp.toString();
@@ -63,15 +61,4 @@ class Request {
 		this.cookie.toResponse(response);
 		return response;
 	}
-	respond(){
-		const response = this.createResponse();
-		this.request.respond(response);
-		//this.sessionObject && this.sessionObject.save();
-	}
-
-	// async initSession(){
-	// 	this.sessionObject = new Session(this);
-	// 	await this.sessionObject.init();
-	// 	this.sess = this.sessionObject.data;
-	// }
 }
