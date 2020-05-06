@@ -18,8 +18,9 @@ await app.need(import('../app/log.js'));
 await app.need(import('../app/dbSession.js'));
 await app.need(import('../app/user.js'));
 await app.need(import('../app/serverInterface.js'));
+await app.need(import('../app/cms/plugin.js'));
 await app.init();
-await app.start(91);
+await app.start(93);
 
 
 
