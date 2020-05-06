@@ -10,9 +10,7 @@ export async function init(app){
     app.db = new DB(connection);
 }
 
-export const schema = {
-    db:{}
-}
+export const schema = {db:{}}
 
 export async function prepare(app){
     const dbSchema = app.schema.db;

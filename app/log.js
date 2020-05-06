@@ -4,7 +4,7 @@ import {Sha1} from "https://deno.land/std@v0.42.0/util/sha1.ts";
 
 function sha1(string){
     const sha1 = new Sha1();
-    sha1.update(string);
+    sha1.update(string.toString());
     return sha1.toString();
 }
 
@@ -14,18 +14,21 @@ function sha1(string){
 //     await nuxApp.need('server')
 // }
 
-export async function serve(req) {
+export async function serve(ctx) {
     // await nuxApp.need('db')
-    const db = req.nuxApp.db;
+    const db = ctx.app.db;
     async function getLogPromise () {
-        // let post = req.post;
+        // let post = ctx.post;
         // if (post.includes('pw":"')) post = post.replace(/pw":"[^"]*/, 'pw":"-----'); // xhr-logn / change-pw
         // if (post.includes('"pw"'))  post = post.replace(/("pw"[^"]+")[^"]+"/, '$1-----"'); // post-login
+        const referer = ctx.in.headers.get('referer') ?? '';
+        const url     = ctx.in.url.toString();
+        const ua      = ctx.in.headers.get('user-agent') ?? '';
         const getRowId = row => row.cell('id').value;
-        const pUrlId = db.table('log_url').ensure({hash: sha1(req.url), url: req.url }).then(getRowId);
-        const pRefId = db.table('log_url').ensure({hash: sha1(req.referer), url: req.header.referer ?? '' }).then(getRowId);
-        const pIpId  = db.table('log_ip').ensure({ip: req.ip }).then(getRowId);
-        const pUaId  = db.table('log_user_agent').ensure({user_agent: req.header['user-agent'] ?? '' }).then(getRowId);
+        const pUrlId = db.table('log_url').ensure({hash: sha1(url), url:url }).then(getRowId);
+        const pRefId = db.table('log_url').ensure({hash: sha1(referer), url: referer }).then(getRowId);
+        const pIpId  = db.table('log_ip').ensure({ip: ctx.in.ip }).then(getRowId);
+        const pUaId  = db.table('log_user_agent').ensure({user_agent:ua}).then(getRowId);
         let [url_id, referer_id, ip_id, ua_id] = [await pUrlId, await pRefId, await pIpId, await pUaId];
         const row = await db.table('log').insert({
             time: Date.now(),
@@ -37,10 +40,10 @@ export async function serve(req) {
         });
         return await row.cell('id').value;
     }
-    req.nuxApp.log = {
+    ctx.app.log = {
         id: getLogPromise()
     };
-    req.response.body += 'log-id: ' + (await req.nuxApp.log.id) + '<br>\n';
+    ctx.out.body += 'log-id: ' + (await ctx.app.log.id) + '<br>\n';
 }
 
 export const schema = {

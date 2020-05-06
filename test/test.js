@@ -3,6 +3,7 @@ import {NuxApp} from '../app/app.js';
 
 var app = new NuxApp({
     basePath: '/',
+    appPath: import.meta.url.replace('file:///','').replace(/\/[^\/]+$/, ''),
     db: {
         hostname: "127.0.0.1",
         username: "root",

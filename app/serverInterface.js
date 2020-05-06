@@ -9,42 +9,44 @@ export async function init(nuxApp){
     nuxApp.siApi = new Api();
 }
 
-export async function serve(req) {
-    //if (req.method !== 'post') return;
+export async function serve(ctx) {
+    //if (ctx.method !== 'post') return;
 
-    // var rawBody = await Deno.readAll(req.request.body)
+    // var rawBody = await Deno.readAll(ctx.request.body)
     // const decoder = new TextDecoder();
     // const str = decoder.decode(rawBody);
     // console.log(str);
     let form = null;
-    if (req.header['content-type'] && req.header['content-type'].startsWith('multipart/form-data')) {
-        const boundary = req.header['content-type'].replace(/.*boundary=([^=]+)$/, '$1');
-        //console.log(req.header)
+    const contentType = ctx.in.headers.get('content-type');
+    if (contentType && contentType.startsWith('multipart/form-data')) {
+        const boundary = contentType.replace(/.*boundary=([^=]+)$/, '$1');
+        //console.log(ctx.header)
         console.log(boundary);
-        const reader = new MultipartReader(req.request.body, boundary);
+        const reader = new MultipartReader(ctx.request.body, boundary);
         //const form = await reader.readForm()
         const form = await reader.readForm(1 << 20)
         //const form = await reader.readForm(20);
         console.log('form', form)
 
     }
+
+    return;
+
     let ask = null;
     if (form) {
         ask = JSON.parse(form.askJSON);
     }
     ask = JSON.parse('{"serverInterface":[{"fn":"Setting","args":[{"crowd out":"","sidebar":"tree","tree_show_c":"","widget":{"data":{"access":"","access.grp":"","access.time":"","access.usr":"","classes":"","cont":"","divers":"","extended":"","media":"1","options":"1","preview":"","seo":"","sets":"","superuser":"","txts":"","urls":""},"_Es":{"set":[null]}}},["cms.frontend.1","custom"]]},{"fn":"cms_frontend_1::widget","args":["tree",{"pid":2}]}]}');
-    console.log(ask)
     if (ask['serverInterface']) {
         var returns = [];
         for (let item of ask['serverInterface']) {
-            console.log(item)
-            ret = this.siApi.call(item.fn, item.args);
-            returns.push(ret);
+            returns.push(this.siApi.call(item.fn, item.args));
         }
-		Answer($ret);
-
+        ctx.out.headers.set('content-type', 'application/json; charset=UTF-8'); // ttodo: charset needed?
+        ctx.out.body = returns;
+		//Answer(returns);
+        return false;
     }
-    return true;
 
 }
 
@@ -63,6 +65,7 @@ class Api {
 		let ok = true;
 
         // before
+        /*
         var matches = fn.match(/(.+)::(.+)/)
 		if (matches) {
             let clas = this.classes[matches[1]]
@@ -78,14 +81,17 @@ class Api {
                 ok = v !== false;
 			}
 		}
-
+        */
         this.tokenCheckNeeded && this.checkToken();
 		this.tokenCheckNeeded = true; // ensure next api access checks token!
 
 		if (ok) {
 			//qg.fire('Api::before', {fn, args);
-            //ret = call_user_func_array('qg\serverInterface_' + fn, args);
-            ret = this.fns[fn].call(args);
+            if (!this.fns[fn]) {
+                ret = {ok:false};
+            } else {
+                ret = this.fns[fn].call(args);
+            }
 			//qg.fire('Api::after', {fn, args, {return:ret});
 		}
 
@@ -99,6 +105,7 @@ class Api {
 		return ret;
 	}
     checkToken(req) {
+return;
         //if (!isset(G()->ASK['serverInterface'])) return; // no request from the client, no need to test token
         if (!req.post.qgToken) {
             report.notice('hacking? qgToken not set');

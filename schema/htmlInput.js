@@ -1,6 +1,6 @@
 import {complete} from "./schema.js";
 import {mixin} from "../util/js.js";
-import {htmlInput} from "../html/input.js";
+import {input} from "../html/html.js";
 
 function toHtmlInputSchema(schema){
     console.log(schema);
@@ -30,7 +30,7 @@ function toHtmlInputSchema(schema){
 
 export function tohtmlInput(schema, value){
     const attr = toHtmlInputSchema(schema);
-    return htmlInput(attr, value);
+    return input(attr, value);
 }
 
 const formatDefaults = {

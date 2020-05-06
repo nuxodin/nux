@@ -5,8 +5,8 @@ export async function init(app){
     app.fileServer = new FileServer(app.config.pubPath, app.config.basePath);
 }
 
-export async function serve(req){
-    if (!req.URL.pathname.startsWith( this.config.basePath )) return;
-    let found = await this.fileServer.serve(req);
+export async function serve(ctx){
+    if (!ctx.in.url.pathname.startsWith( this.config.basePath )) return;
+    let found = await this.fileServer.serve(ctx);
     return found;
 }

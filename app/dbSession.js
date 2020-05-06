@@ -8,20 +8,20 @@ function sha1(string){
 
 export const namespace = 'sess';
 
-export async function init(nuxApp){
-    nuxApp.sessionManager = new SessionManager(nuxApp.db);
+export async function init(app){
+    app.sessionManager = new SessionManager(app.db);
 }
 
-export async function serve(req){
-    req.session = await req.nuxApp.sessionManager.fromRequest(req);
-    await req.session.load();
-    req.session.touch();
-    req.response.body += 'session-id: ' + req.session.hash;
+export async function serve(ctx){
+    ctx.session = await ctx.app.sessionManager.fromContext(ctx);
+    await ctx.session.load();
+    ctx.session.touch();
+    ctx.out.body += 'session-id: ' + ctx.session.hash;
 }
 
-export function unserve(req) {
-    req.session.touch();
-}
+// export function unserve(req) {
+//     req.session.touch();
+// }
 
 
 
@@ -48,11 +48,11 @@ class SessionManager {
         if (!valid) session = await this.generate();
         return session;
     }
-    async fromRequest(req) {
-        let hash = req.cookie.get('sess_id');
+    async fromContext(ctx) {
+        let hash = ctx.cookies.get('sess_id');
         let session = await this.ensure(hash);
         if (hash !== session.hash) console.log('new cookie', session.hash);
-        req.cookie.set('sess_id', {
+        ctx.cookies.set('sess_id', {
             value: session.hash,
             httpOnly: true,
             secure: true,

@@ -1,6 +1,6 @@
 import { mixin } from "../util/js.js";
 import { serve } from "https://deno.land/std@v0.42.0/http/server.ts";
-import { getNuxRequest } from "../request/request.js";
+import { getContext } from "../request/context.js";
 import { ensureDir } from "../util/nuxo.js";
 
 
@@ -10,10 +10,10 @@ export class NuxApp extends EventTarget {
 		//this.config = Object.assign(defaults, config);
         this.config = config;
         if (!this.config.basePath) this.config.basePath = '/';
-        if (!this.config.appPath) {
-            var path = location.href.replace('file:///','')
-            this.config.appPath = path.replace(/\/[^\/]+$/, '')
-        }
+        // if (!this.config.appPath) {
+        //     var path = location.href.replace('file:///','')
+        //     this.config.appPath = path.replace(/\/[^\/]+$/, '')
+        // }
         this.config.pubPath = this.config.appPath + '/pub';
         ensureDir(this.config.pubPath);
 
@@ -27,16 +27,11 @@ export class NuxApp extends EventTarget {
     }
     async serve(denoRequest){
         if (!denoRequest.url.startsWith(this.config.basePath)) return;
-        var req = getNuxRequest(denoRequest);
-        req.appUrlPart = denoRequest.url.substr(this.config.basePath.length);
-        req.nuxApp = this;
-//        if (this.config.basePath)
-
-
-        //var event = new CustomEvent('fetch', req);
-        //this.dispatchEvent(event);
-        await this._modulesCall('serve', req);
-        return await req.createResponse();
+        var ctx = getContext(denoRequest);
+        ctx.appUrlPart = denoRequest.url.substr(this.config.basePath.length);
+        ctx.app = this;
+        await this._modulesCall('serve', ctx);
+        return await ctx.out.toServerResponse();
     }
     async _modulesCall(what, arg){
         for (let module in this.modules) {
