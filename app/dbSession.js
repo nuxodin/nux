@@ -16,7 +16,6 @@ export async function serve(ctx){
     ctx.session = await ctx.app.sessionManager.fromContext(ctx);
     await ctx.session.load();
     ctx.session.touch();
-    ctx.out.body += 'session-id: ' + ctx.session.hash;
 }
 
 // export function unserve(req) {
@@ -135,7 +134,7 @@ export const schema = {
     db:{properties:{sess:{properties:{
         id:{
             format: 'uint32',
-            $autoincrement: true,
+            colAutoincrement: true,
         },
         hash:{
             maxLength: 64,

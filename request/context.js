@@ -22,24 +22,14 @@ class Context {
 
 class Request {
 	constructor(oRequest){
+		this.severRequest = oRequest;
 		this.ip = oRequest.conn.remoteAddr.hostname;
-
+		this.method = oRequest.method;
 		// request-headers
 		this.headers = oRequest.headers;
-
-		/*
-		this.header = Object.create(null);
-		for (let header of oRequest.headers) {
-			let name = header[0];
-			let value = header[1];
-			this.header[name] = value;
-		}
-		Object.freeze(this.header)
-		*/
-
 		// Url-object
-		let protocol = 'http:'; // todo: where can i find the protocol? rel.proto is "HTTP/1.1"
-		this.url = new URL(protocol + '//' + this.headers.get('host') + oRequest.url);
+		let proto = oRequest.conn.remoteAddr.transport === 'tcp' ? 'https:' : 'http:'; // ok?
+		this.url = new URL(proto + '//' + this.headers.get('host') + oRequest.url);
 		this.__get = serializeParams(this.url.searchParams); // beta
 	}
 }
@@ -50,6 +40,16 @@ class Response {
 		this.headers = new Headers();
 		this.csp = new Csp();
 		this.cspReport = new Csp();
+		this.body = '';
+	}
+	mixin(request) {
+		if (request.headers) {
+			for (let [key, value] of request.headers) {
+				this.headers.set(key, value);
+			}
+		}
+		if ('status' in request) this.status = request.status;
+		if ('body' in request)   this.body = request.body;
 	}
 	toServerResponse() {
 		// body

@@ -1,5 +1,5 @@
 import { mixin } from "../util/js.js";
-import { serve } from "https://deno.land/std@v0.42.0/http/server.ts";
+import { serve, serveTLS } from "https://deno.land/std@v0.42.0/http/server.ts";
 import { getContext } from "../request/context.js";
 import { ensureDir } from "../util/nuxo.js";
 
@@ -15,15 +15,30 @@ export class NuxApp extends EventTarget {
         //     this.config.appPath = path.replace(/\/[^\/]+$/, '')
         // }
         this.config.pubPath = this.config.appPath + '/pub';
+        this.config.cacheDir = this.config.appPath + '/cache';
         ensureDir(this.config.pubPath);
+        ensureDir(this.config.cacheDir);
 
         this.modules = {};
     }
 	async start(port){
-        for await (const denoRequest of serve(":"+port)) {
-            var response = await this.serve(denoRequest);
-            if (response) denoRequest.respond(response);
-		}
+        var myPath = new URL(import.meta.url).pathname.substr(1);
+        const httpsOptions = {
+            hostname: "localhost",
+            port: 88,
+            certFile: myPath + '/../app/test_localhost.cert',
+            keyFile: myPath + '/../app/test_localhost.key',
+        };
+        [[serve, ':'+port]/*, [serveTLS, httpsOptions]*/].forEach(async ([fn, arg])=>{
+            for await (const denoRequest of fn(arg)) {
+                var response = await this.serve(denoRequest);
+                if (response) denoRequest.respond(response);
+            }
+        });
+        // for await (const denoRequest of serve(":"+port)) {
+        //     var response = await this.serve(denoRequest);
+        //     if (response) denoRequest.respond(response);
+        // }
     }
     async serve(denoRequest){
         if (!denoRequest.url.startsWith(this.config.basePath)) return;

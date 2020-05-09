@@ -1,4 +1,7 @@
 
+//import 'https://raw.githubusercontent.com/nuxodin/deno-require/master/require.js?10';
+
+
 import {NuxApp} from '../app/app.js';
 
 var app = new NuxApp({
@@ -19,11 +22,30 @@ await app.need(import('../app/dbSession.js'));
 await app.need(import('../app/user.js'));
 await app.need(import('../app/serverInterface.js'));
 await app.need(import('../app/cms/plugin.js'));
+await app.need(import('../app/uncdn.js'));
+
+await app.need({
+    namespace: 'xxx',
+    serve: async function(ctx){
+        var app = ctx.app;
+        ctx.out.headers.set("content-type", "text/html; charset=utf-8");
+        ctx.out.body += `
+            <!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <script type=module>
+                        import {render, html, svg} from '${app.uncdn.url('https://unpkg.com/uhtml@1.10.0/esm/index.js?module')}';
+                        render(uhtml, html\`<h1>Hello 👋 uncdn</h1>\`);
+                    </script>
+                <body>
+                    <div id=uhtml>reload some times to wait for files copied from cdn</div>
+                    <p>log-id: ${await ctx.log.id}<br></p>
+                    <p>sess-hash: ${await ctx.session.hash}<br></p>
+            `;
+    }
+})
 await app.init();
 await app.start(93);
-
-
-
 
 
 

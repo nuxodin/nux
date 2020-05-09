@@ -40,10 +40,9 @@ export async function serve(ctx) {
         });
         return await row.cell('id').value;
     }
-    ctx.app.log = {
+    ctx.log = {
         id: getLogPromise()
     };
-    ctx.out.body += 'log-id: ' + (await ctx.app.log.id) + '<br>\n';
 }
 
 export const schema = {
