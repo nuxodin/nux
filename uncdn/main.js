@@ -25,6 +25,11 @@ export class Uncdn {
         return this.rootUrl + localPart;
     }
 
+    /**
+     * get the response from uncdn if managed by uncdn
+     * @param {object} req - deno-server-request
+     * @return {object|false} deno-server-response
+     */
     async requestToResponse(req) {
         if (!req.url.startsWith(this.rootUrl)) return false;
         let cdnUrl = req.url.substr(this.rootUrl.length);
