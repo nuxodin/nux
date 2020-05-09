@@ -1,4 +1,4 @@
-import Row from '../../../nux_db/Row.js';
+import Row from '../../nux_db/Row.js';
 import TextPro from './TextPro.js';
 import templates from './templates.js';
 

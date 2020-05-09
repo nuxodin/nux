@@ -1,6 +1,6 @@
 import { mixin } from "../util/js.js";
 import { serve, serveTLS } from "https://deno.land/std@v0.42.0/http/server.ts";
-import { getContext } from "../request/context.js";
+import { getContext } from "../context/context.js";
 import { ensureDir } from "../util/nuxo.js";
 
 
@@ -35,6 +35,7 @@ export class NuxApp extends EventTarget {
                 if (response) denoRequest.respond(response);
             }
         });
+        console.log('server listen on port '+port)
         // for await (const denoRequest of serve(":"+port)) {
         //     var response = await this.serve(denoRequest);
         //     if (response) denoRequest.respond(response);

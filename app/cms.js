@@ -1,4 +1,4 @@
-import {Cms} from './CMS.js';
+import {Cms} from '../cms/CMS.js';
 
 export const namespace = 'cms';
 
@@ -17,5 +17,5 @@ export async function serve (ctx) {
 }
 
 
-import * as schemas from './dbSchema.js';
+import * as schemas from '../cms/dbSchema.js';
 //export {db:schemas.db};
