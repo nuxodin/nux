@@ -42,15 +42,6 @@ class Response {
 		this.cspReport = new Csp();
 		this.body = '';
 	}
-	mixin(request) {
-		if (request.headers) {
-			for (let [key, value] of request.headers) {
-				this.headers.set(key, value);
-			}
-		}
-		if ('status' in request) this.status = request.status;
-		if ('body' in request)   this.body = request.body;
-	}
 	toServerResponse() {
 		// body
 		let body = this.body;
@@ -65,5 +56,14 @@ class Response {
 			body,
 			headers: this.headers,
 		};
+	}
+	mixin(request) {
+		if (request.headers) {
+			for (let [key, value] of request.headers) {
+				this.headers.set(key, value);
+			}
+		}
+		if ('status' in request) this.status = request.status;
+		if ('body' in request)   this.body = request.body;
 	}
 }

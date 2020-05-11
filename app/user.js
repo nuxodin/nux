@@ -1,5 +1,15 @@
 export const namespace = 'user';
 
+export async function serve(ctx){
+    ctx.user = async function(){ // todo
+        const usr_id = ctx.session.usr_id;
+        if (!usr_id) return false;
+        return await ctx.db.table('usr').row(usr_id).is();
+    }();
+    // var x = await ctx.user;
+    // console.log(x)
+}
+
 export const schema = {
     db:{properties:{
         usr:{properties:{
@@ -45,6 +55,7 @@ export const schema = {
         }},
     }}
 }
+
 
 
 export const routes = {
