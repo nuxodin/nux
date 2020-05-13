@@ -1,8 +1,7 @@
 import { mixin } from "../util/js.js";
-import { serve, serveTLS } from "https://deno.land/std@v0.42.0/http/server.ts";
+import { serve, serveTLS } from "https://deno.land/std@0.50.0/http/server.ts";
 import { getContext } from "../context/context.js";
 import { ensureDir } from "../util/nuxo.js";
-
 
 export class NuxApp extends EventTarget {
 	constructor(config={}){
@@ -18,7 +17,6 @@ export class NuxApp extends EventTarget {
         this.config.cacheDir = this.config.appPath + '/cache';
         ensureDir(this.config.pubPath);
         ensureDir(this.config.cacheDir);
-
         this.modules = {};
     }
 	async start(port){
@@ -70,6 +68,14 @@ export class NuxApp extends EventTarget {
             const schema = await exports.schema;
             mixin(schema, this.schema, false, true);
         }
+
+//        await Deno.create(this.config.appPath + '/config.json');
+        const configJson = await Deno.readTextFile(this.config.appPath + '/config.json');
+        const config = JSON.parse(configJson);
+        console.log(config)
+
+
+
         for (let module in this.modules) {
             let exports = this.modules[module];
             if (!exports.prepare) continue;
@@ -77,6 +83,7 @@ export class NuxApp extends EventTarget {
         }
     }
 }
+
 
 
 

@@ -1,6 +1,7 @@
 export const namespace = 'db';
 
-import DB from "file:D://workspace/github/nux_db/DB.js";
+//import DB from "file:D://workspace/github/nux_db/DB.js";
+import DB from "../../nux_db/DB.js";
 import {Client} from "https://deno.land/x/mysql/mod.ts";
 import * as schemaSql from "../schema/sql.js";
 
@@ -10,7 +11,33 @@ export async function init(app){
     app.db = new DB(connection);
 }
 
-export const schema = {db:{}}
+export const schema = {
+    db:{},
+    settings:{
+        properties:{
+            db:{
+                properties:{
+                    handler: {
+                        enum:['mysql', 'postgrees', 'sqlite'],
+                        required:true
+                    },
+                    host: {
+                        default:'localhost'
+                    },
+                    username: {
+                        type:'string'
+                    },
+                    password: {
+                        type:'string'
+                    },
+                    database: {
+                        type:'string'
+                    },
+                }
+            }
+        }
+    }
+};
 
 export async function prepare(app){
     const dbSchema = app.schema.db;

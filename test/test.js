@@ -1,7 +1,6 @@
 
 //import 'https://raw.githubusercontent.com/nuxodin/deno-require/master/require.js?10';
 
-
 import {NuxApp} from '../app/app.js';
 
 var app = new NuxApp({
@@ -23,6 +22,7 @@ await app.need(import('../app/user.js'));
 await app.need(import('../app/serverInterface.js'));
 await app.need(import('../app/cms.js'));
 await app.need(import('../app/uncdn.js'));
+await app.need(import('../app/moduleManager.js'));
 
 await app.need({
     namespace: 'xxx',
@@ -42,7 +42,8 @@ await app.need({
                     <p>log-id: ${await ctx.log.id}<br></p>
                     <p>sess-hash: ${await ctx.session.hash}<br></p>
             `;
-    }
+            //ctx.out.body += html.dump(this);
+        }
 })
 await app.init();
 await app.start(93);
@@ -52,7 +53,7 @@ await app.start(93);
 
 
 /*
-import { serve } from "https://deno.land/std@v0.42.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.50.0/http/server.ts";
 
 var app1 = new NuxApp({basePath: '/x/'});
 await app1.need(import('../app/fileServer.js'));

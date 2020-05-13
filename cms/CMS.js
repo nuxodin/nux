@@ -10,13 +10,6 @@ export class Cms {
     }
     async pageFromRequest(url) {
         var page_id = await this.db.one("SELECT page_id FROM page_url WHERE url = "+this.db.quote(url));
-        console.log(page_id);
-
-        var rows = await this.db.table('page_url').rows({url:url});
-        const row = rows[0];
-        console.log(await row.values())
-
-
         if (!page_id) return false;
         return this.Page(page_id);
     }
