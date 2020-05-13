@@ -135,9 +135,8 @@ export function dump(obj, maxLevel=5) {
     '.nuxHtmlDump number , .nuxHtmlDump bool { color:green; }' +
     '.nuxHtmlDump string { color:#800; }' +
     '.nuxHtmlDump null { color:#888; }' +
-    '.nuxHtmlDump function {' +
-    '   color:#88f;' +
-    '}' +
+    '.nuxHtmlDump function { color:#88f; }' +
+    '.nuxHtmlDump symbol { color:#f48; }' +
     '.nuxHtmlDump thead {' +
     '   font-weight:bold;' +
     '}' +
@@ -157,6 +156,7 @@ export function dump(obj, maxLevel=5) {
             case 'number': return '<number>'+obj+'<number>';
             case 'boolean': return '<bool>'+obj+'<bool>';
             case 'function': return '<function>function '+obj.name+'<function>';
+            case 'symbol': return '<symbol>'+obj.toString()+'<symbol>';
             default:
                 if (obj === null || obj === undefined) return '<null>'+obj+'<null>';
                 if (obj instanceof Date) return '<date>'+obj+'<date>';
@@ -169,7 +169,11 @@ export function dump(obj, maxLevel=5) {
                 }
 
                 const id = ('x'+Math.random()).replace('.','');
-                objects.set(obj, id);
+                try {
+                    objects.set(obj, id);
+                } catch {
+                    return '? error ?';
+                }
 
                 // table
                 var cols = objectIsTable(obj);
