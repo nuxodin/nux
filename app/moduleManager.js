@@ -2,7 +2,6 @@ import * as html from '../html/html.js';
 
 export const namespace = 'moduleManager';
 
-
 export async function serve(ctx) {
     if (ctx.appUrlPart === 'moduleManager') {
 
@@ -11,7 +10,7 @@ export async function serve(ctx) {
             <html lang="en">
                 <body>
             `+
-            html.dump(this);
+            html.dump(window);
 
         return true;
     }

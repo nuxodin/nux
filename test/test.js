@@ -3,6 +3,7 @@
 
 import {NuxApp} from '../app/app.js';
 
+
 var app = new NuxApp({
     basePath: '/',
     appPath: import.meta.url.replace('file:///','').replace(/\/[^\/]+$/, ''),
@@ -13,6 +14,8 @@ var app = new NuxApp({
         db: "v7_deno",
     }
 });
+
+
 
 await app.need(import('../app/fileServer.js'));
 await app.need(import('../app/db.js'));
@@ -47,7 +50,6 @@ await app.need({
 })
 await app.init();
 await app.start(93);
-
 
 
 
