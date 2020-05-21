@@ -1,4 +1,4 @@
-import { serveFile } from "https://deno.land/std@0.50.0/http/file_server.ts";
+import { serveFile } from "https://deno.land/std@0.51.0/http/file_server.ts";
 
 /** Class for translating cdn => locally */
 export class Uncdn {
@@ -37,6 +37,7 @@ export class Uncdn {
             var path = this._path(cdnUrl);
             const response = await serveFile(req, path);
             response.headers.set("content-type", 'text/javascript');
+            response.headers.set("cache-control", 'public, max-age=31536000'); // immutable?
             return response;
         } catch (e) { // not found
             if (this.openProxy) {

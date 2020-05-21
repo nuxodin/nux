@@ -1,6 +1,6 @@
 export const namespace = 'serverInterface';
 
-import { MultipartReader } from "https://deno.land/std@0.50.0/mime/multipart.ts";
+import { MultipartReader } from "https://deno.land/std@0.51.0/mime/multipart.ts";
 //import { MultipartReader } from "https://raw.githubusercontent.com/denoland/deno/master/std/mime/multipart.ts";
 
 
