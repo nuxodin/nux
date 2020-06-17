@@ -3,7 +3,6 @@
 
 import {NuxApp} from '../app/app.js';
 
-
 var app = new NuxApp({
     basePath: '/',
     appPath: import.meta.url.replace('file:///','').replace(/\/[^\/]+$/, ''),
@@ -16,7 +15,6 @@ var app = new NuxApp({
 });
 
 
-
 await app.need(import('../app/fileServer.js'));
 await app.need(import('../app/db.js'));
 await app.need(import('../app/log.js'));
@@ -26,7 +24,6 @@ await app.need(import('../app/serverInterface.js'));
 await app.need(import('../app/cms.js'));
 await app.need(import('../app/uncdn.js'));
 await app.need(import('../app/moduleManager.js'));
-
 await app.need({
     namespace: 'xxx',
     serve: async function(ctx){
@@ -53,9 +50,8 @@ await app.start(93);
 
 
 
-
 /*
-import { serve } from "https://deno.land/std@0.51.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.56.0/http/server.ts";
 
 var app1 = new NuxApp({basePath: '/x/'});
 await app1.need(import('../app/fileServer.js'));

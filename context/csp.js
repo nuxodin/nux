@@ -30,7 +30,7 @@ export class Csp {
             if (!allowed.length) continue;
             str += type+' '+allowed.map(item=>item[0]).join(' ')+'; ';
         }
-        if (this.report_uri) str += ' report-uri '.this.report_uri;
+        if (this.report_uri) str += ' report-uri '+this.report_uri;
         return str;
     }
 };

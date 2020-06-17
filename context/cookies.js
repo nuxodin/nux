@@ -1,12 +1,12 @@
-import { delCookie, setCookie, getCookies } from "https://deno.land/std@0.51.0/http/cookie.ts";
+import { delCookie, setCookie, getCookies } from "https://deno.land/std@0.56.0/http/cookie.ts";
 
 export class Cookies2 {
 
-	#newCookies = Object.create(null);
 
 	constructor(request, response){
 		this.request = request;
 		this.response = response;
+		this._newCookies = Object.create(null);
 	}
 	get oldCookies(){
 		var cookies = getCookies(this.request);
@@ -14,26 +14,26 @@ export class Cookies2 {
 		return cookies;
 	}
 	get(name){
-		return this.#newCookies[name]!==undefined ? this.#newCookies[name].value : this.oldCookies[name];
+		return this._newCookies[name]!==undefined ? this._newCookies[name].value : this.oldCookies[name];
 	}
 	set(name, options){
 		if (typeof options === 'number') options = options+'';
 		if (typeof options === 'string') options = {value:options};
 		if (options.value === undefined) console.warn('no cookie value! todo: delete?');
 		options.name = name;
-		this.#newCookies[name] = options;
+		this._newCookies[name] = options;
 		setCookie(this.response, options);
 	}
 	delete(name){
 		//if (this.oldCookies[name]) { // only if cookie was sent?
-			this.#newCookies[name] = undefined;
+			this._newCookies[name] = undefined;
 		//}
 		this.oldCookies[name] = undefined;
 		delCookie(this.response, name);
 	}
 	// toResponse(response) {
-	// 	for (const name in this.#newCookies) {
-	// 		const cookie = this.#newCookies[name];
+	// 	for (const name in this._newCookies) {
+	// 		const cookie = this._newCookies[name];
 	// 		if (cookie === undefined) {
 	// 			delCookie(response, name);
 	// 		} else {

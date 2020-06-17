@@ -1,4 +1,9 @@
 
+/**
+ * parse get-params to look like php
+ * @param {string[][]} items - get-params
+ */
+
 export function serializeParams(items) {
 	var object = Object.create(null);
 	for (let item of items) {
