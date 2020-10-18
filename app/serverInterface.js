@@ -1,9 +1,6 @@
 export const namespace = 'serverInterface';
 
-import { MultipartReader } from "https://deno.land/std@0.56.0/mime/multipart.ts";
-//import { MultipartReader } from "https://raw.githubusercontent.com/denoland/deno/master/std/mime/multipart.ts";
-
-
+import { MultipartReader } from "https://deno.land/std@0.74.0/mime/multipart.ts";
 
 export async function init(nuxApp){
     nuxApp.siApi = new Api();

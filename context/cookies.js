@@ -1,8 +1,6 @@
-import { delCookie, setCookie, getCookies } from "https://deno.land/std@0.56.0/http/cookie.ts";
+import { deleteCookie, setCookie, getCookies } from "https://deno.land/std@0.74.0/http/cookie.ts";
 
 export class Cookies2 {
-
-
 	constructor(request, response){
 		this.request = request;
 		this.response = response;
@@ -29,13 +27,13 @@ export class Cookies2 {
 			this._newCookies[name] = undefined;
 		//}
 		this.oldCookies[name] = undefined;
-		delCookie(this.response, name);
+		deleteCookie(this.response, name);
 	}
 	// toResponse(response) {
 	// 	for (const name in this._newCookies) {
 	// 		const cookie = this._newCookies[name];
 	// 		if (cookie === undefined) {
-	// 			delCookie(response, name);
+	// 			deleteCookie(response, name);
 	// 		} else {
 	// 			setCookie(response, cookie);
 	// 		}

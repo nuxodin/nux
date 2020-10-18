@@ -1,6 +1,6 @@
 export const namespace = 'log';
 
-import {Sha1} from "https://deno.land/std@0.56.0/hash/sha1.ts";
+import {Sha1} from "https://deno.land/std@0.74.0/hash/sha1.ts";
 
 function sha1(string){
     const sha1 = new Sha1();

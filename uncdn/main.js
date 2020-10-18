@@ -1,7 +1,5 @@
-import { serveFile } from "https://deno.land/std@0.56.0/http/file_server.ts";
+import { serveFile } from "https://deno.land/std@0.74.0/http/file_server.ts";
 
-
-import {default as terser} from 'https://cdn.pika.dev/terser@^4.6.13';
 
 /** Class for translating cdn => locally */
 export class Uncdn {
@@ -70,15 +68,21 @@ export class Uncdn {
         } catch (e) { // not found
             let contents;
             if (options.bundle) { // as a bundle
+
                 let maybeDiagnostics1;
                 [maybeDiagnostics1, contents] = await Deno.bundle(url);
+
             } else {
+
                 const response = await fetch(url);
                 contents = await response.text();
                 contents = contents.replace(/(import .+ from ["'])(http[^"]+)(["'])/g, (full, $1, $2, $3)=>{
                     return $1 + this.url($2) + $3;
                 });
 
+                // minify
+                //import {default as terser} from 'https://cdn.pika.dev/terser@^4.8.0';
+                const {default:terser} = await import('https://cdn.pika.dev/terser@^4.8.0');
                 contents = terser.minify(contents).code;
 
             }
