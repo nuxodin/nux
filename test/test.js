@@ -51,7 +51,7 @@ await app.start(93);
 
 
 /*
-import { serve } from "https://deno.land/std@0.74.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.79.0/http/server.ts";
 
 var app1 = new NuxApp({basePath: '/x/'});
 await app1.need(import('../app/fileServer.js'));

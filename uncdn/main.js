@@ -1,4 +1,4 @@
-import { serveFile } from "https://deno.land/std@0.74.0/http/file_server.ts";
+import { serveFile } from "https://deno.land/std@0.79.0/http/file_server.ts";
 
 
 /** Class for translating cdn => locally */
@@ -81,9 +81,9 @@ export class Uncdn {
                 });
 
                 // minify
-                //import {default as terser} from 'https://cdn.pika.dev/terser@^4.8.0';
-                const {default:terser} = await import('https://cdn.pika.dev/terser@^4.8.0');
-                contents = terser.minify(contents).code;
+// todo
+                //const {default:terser} = await import('https://cdn.skypack.dev/terser@v5.3.8?min');
+                //contents = terser.minify(contents).code;
 
             }
             /*

@@ -4,7 +4,7 @@ import {
     assertThrows,
     assertThrowsAsync,
     assert,
-} from "https://deno.land/std@0.74.0/testing/asserts.ts";
+} from "https://deno.land/std@0.79.0/testing/asserts.ts";
 
 import {Schema} from './schema.js'
 
