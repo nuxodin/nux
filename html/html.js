@@ -217,7 +217,7 @@ export function dump(obj, maxLevel=5) {
                 keys[key]++;
             }
         }
-        if (numProps < 3) return; // just tow rows
+        if (numProps < 3) return; // just two rows
         if (Object.values(keys).length < 2) return; // not enough cols
         for (let keyNum of Object.values(keys)) {
             if (keyNum < numProps/2) { // not minimum half the keys in sub obj

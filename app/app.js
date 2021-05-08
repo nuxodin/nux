@@ -1,5 +1,5 @@
 import { mixin } from "../util/js.js";
-import { serve, serveTLS } from "https://deno.land/std@0.79.0/http/server.ts";
+import { serve, serveTLS } from "https://deno.land/std@0.93.0/http/server.ts";
 import { getContext } from "../context/context.js";
 import { ensureDir } from "../util/nuxo.js";
 

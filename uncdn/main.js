@@ -1,5 +1,4 @@
-import { serveFile } from "https://deno.land/std@0.79.0/http/file_server.ts";
-
+import { serveFile } from "https://deno.land/std@0.93.0/http/file_server.ts";
 
 /** Class for translating cdn => locally */
 export class Uncdn {
