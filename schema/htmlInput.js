@@ -33,7 +33,7 @@ export function tohtmlInput(schema, value){
     return input(attr, value);
 }
 
-const formatDefaults = {
+const formatDefaults = { // int/uint?? these are not json-schema formats..., or?
     int8: {
         type:'number',
     },
