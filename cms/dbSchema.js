@@ -1,3 +1,6 @@
+
+// todo: json-schema
+
 export var db = {properties:{
     page:{properties:{
         id:{ colAutoincrement:true },
