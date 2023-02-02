@@ -2,14 +2,14 @@ import { mixin } from '../util/js.js';
 
 export class Schema {
     constructor(schema){
-        for (let i in schema) this[i] = schema[i];
+        for (const i in schema) this[i] = schema[i];
     }
     transform (value) {
-        for (let [prop, descriptor] of Object.entries(properties)) {
+        for (const [prop, descriptor] of Object.entries(properties)) {
             if (!descriptor.transform) continue; // property does not transform value
             const propValue = this[prop];
             if (propValue === undefined) continue; // property not set
-            var newValue = descriptor.transform(propValue, value);
+            const newValue = descriptor.transform(propValue, value);
             if (newValue !== undefined) value = newValue;
         }
         const error = this.error(value);
@@ -17,7 +17,7 @@ export class Schema {
         return value;
     }
     *errors (value){
-        for (let prop in properties) {
+        for (const prop in properties) {
             const descriptor = properties[prop];
             if (!descriptor.validate) continue;
             const propValue = this[prop];
@@ -28,7 +28,7 @@ export class Schema {
         }
     }
     error(value) {
-        for (let error of this.errors(value)) return error;
+        for (const error of this.errors(value)) return error;
         return false;
     }
     validate(value) {
@@ -36,10 +36,10 @@ export class Schema {
     }
     schemaError(){
         let lastError = false
-        for (let prop in properties) {
+        for (const prop in properties) {
             const descriptor = properties[prop];
             if (!descriptor.schemaError) continue;
-            let propValue = this[prop];
+            const propValue = this[prop];
             if (propValue === undefined) continue; // property not set
             const error = descriptor.schemaError(propValue, this);
             if (error) {
@@ -51,7 +51,7 @@ export class Schema {
     }
     toJSON(){
         const obj = {};
-        for (let i in this) obj[i] = this[i];
+        for (const i in this) obj[i] = this[i];
         return obj;
     }
 }
@@ -265,7 +265,7 @@ const properties = {
 const tmpValsMap = new WeakMap();
 
 
-for (let requestedProp in properties) {
+for (const requestedProp in properties) {
     Object.defineProperty(Schema.prototype, requestedProp, {
         get(){
             // prevent reqursion: save getter requested values temporary
@@ -273,7 +273,7 @@ for (let requestedProp in properties) {
                 var startedHere = true;
                 tmpValsMap.set(this, {});
             }
-            var tmpVals = tmpValsMap.get(this);
+            const tmpVals = tmpValsMap.get(this);
             if (requestedProp in tmpVals) {
                 return tmpVals[requestedProp];
             }
@@ -281,7 +281,7 @@ for (let requestedProp in properties) {
 
             // get defaults
             // todo: first loop own properties then all?
-            for (let otherProp in this) { // loop other properties (getter)
+            for (const otherProp in this) { // loop other properties (getter)
                 if (requestedProp === otherProp) continue; // requested Property
                 const options = properties[otherProp]?.options;
                 if (!options) continue;
@@ -297,6 +297,7 @@ for (let requestedProp in properties) {
                 }
             }
             if (startedHere) tmpValsMap.delete(this); // prevent reqursion
+            return null; // getter has to return something
         },
         set(value){
             if (properties[requestedProp].options) {
@@ -409,7 +410,6 @@ export function enforce(schema, value) {
 
 export function validate(schema, value){
     const string = value.toString(); // string representation
-    //value = transform(scheme, value);
     if (!(schema.required) && value==='') return; // is this ok? if not required value can always be '' ???
     //if ((schema.pattern??0) && !preg_match('/'.schema.pattern.'/', value)) return 'Pattern does not match';
     if (schema.required && string==='') return 'required';
@@ -451,7 +451,7 @@ const typeDefaults = {
 
 
 export function hints(schema) {
-    var hints = []
+    const hints = []
     if (schema.transform.caseFirst && !schema.transform.trim) {
         hints.push('you want to add trim if you use caseFirst');
     }

@@ -14,32 +14,32 @@ export class Schema {
     }
     async prepair(){
         const promises = [];
-        for (let schemaObj of this.schemas) {
+        for (const schemaObj of this.schemas) {
 
             // load schema
-            var promise = schemaObj.schema.then(schema=>{
+            const promise = schemaObj.schema.then(schema=>{
 
                 // collect ids
-                let ids = findIds(schema);
-                for (let id in ids) {
+                const ids = findIds(schema);
+                for (const id in ids) {
                     if (id in this.ids) console.warn('id '+id+' already defined');
-                    var idObj = ids[id];
+                    const idObj = ids[id];
                     idObj.schemaObj = schemaObj;
-                    else this.id[id] = idObj;
+                    //else this.id[id] = idObj; ???
                 }
 
                 schemaObj.schema = schema;
             });
             promises.push(promise);
         }
-        var schemas = await Promise.all(promises);
+        const schemas = await Promise.all(promises);
     }
 
     validate(data, path=[]) {
         // holds props already validated my previous schema
         const validated = {};
 
-        for (let schemaObj of this.schemas) {
+        for (const schemaObj of this.schemas) {
             let schema = schemaObj.schema;
 
             // walk to the right path
@@ -52,7 +52,7 @@ export class Schema {
             }
 
             // check properties
-            for (let prop in schema) {
+            for (const prop in schema) {
                 if (prop === '$ref') continue; // check at the end
 
                 if (prop in validated) continue;
@@ -82,8 +82,8 @@ export class Schema {
 
 const validations = {
     type: (types, data)=>{
-        var hasOne = toArray(types).filter(type => {
-            return typeof data === type;
+        const hasOne = toArray(types).filter(type => {
+            return (typeof data) === type;
         });
         return hasOne.lenght;
     },
@@ -98,7 +98,7 @@ const validations = {
 
 function findRef(startSchema, ref){
     let active = startSchema;
-    for (let part of ref.split('/'))  {
+    for (const part of ref.split('/'))  {
         if (part[0]==='#') {
             active = startSchema.$root.$ids[part];
             if (active === undefined) console.warn('$ref not found '+ref+' at: '+part);
@@ -112,7 +112,7 @@ function findRef(startSchema, ref){
 
 
 
-let x = new Schema();
+const x = new Schema();
 x.addSchema({type:'string'});
 x.validate('test')
 

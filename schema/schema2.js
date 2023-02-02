@@ -6,7 +6,7 @@ export class Schema {
         define(this, '$root', parent ? parent.$root : this);
         if (this.$root === this) define(this, '$ids', { '#':this });
 
-        for (let i in schema) {
+        for (const i in schema) {
             const child = schema[i];
             if (Array.isArray(child))  { // how to handle arrays?
                 this[i] = new Schema(child, this);
@@ -23,10 +23,10 @@ export class Schema {
             }
         }
         // mixin "$refs" when the schema is built
-        for (let i in this) {
+        for (const i in this) {
             const child = this[i];
             if (child?.$ref) {
-                let ref = findRef(child, child.$ref);
+                const ref = findRef(child, child.$ref);
                 //Object.setPrototypeOf(child, ref);
                 mixin(ref, child, false, true);
                 delete child['$id'];
@@ -34,7 +34,7 @@ export class Schema {
         }
     }
     $validate(data){
-        for (let i in validate) {
+        for (const i in validate) {
             if (i in this) {
                 validate[i](this[i], data);
             }
@@ -51,8 +51,8 @@ export class Schema {
 
 const validate = {
     type: (types, data)=>{
-        var hasOne = toArray(types).filter(type => {
-            return typeof data === type;
+        const hasOne = toArray(types).filter(type => {
+            return (typeof data) === type;
         });
         return hasOne.lenght;
     },
@@ -66,7 +66,7 @@ const validate = {
 
 function findRef(startSchema, ref){
     let active = startSchema;
-    for (let part of ref.split('/'))  {
+    for (const part of ref.split('/'))  {
         if (part[0]==='#') {
             active = startSchema.$root.$ids[part];
             if (active === undefined) console.warn('$ref not found '+ref+' at: '+part);
