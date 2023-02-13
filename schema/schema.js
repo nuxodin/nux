@@ -6,7 +6,7 @@ export class Schema {
     }
     transform (value) {
         for (const [prop, descriptor] of Object.entries(properties)) {
-            if (!descriptor.transform) continue; // property does not transform value
+            if (!descriptor.transform) continue;
             const propValue = this[prop];
             if (propValue === undefined) continue; // property not set
             const newValue = descriptor.transform(propValue, value);
@@ -17,6 +17,7 @@ export class Schema {
         return value;
     }
     *errors (value){
+        //for (const [prop, descriptor] of Object.entries(properties)) { // test
         for (const prop in properties) {
             const descriptor = properties[prop];
             if (!descriptor.validate) continue;

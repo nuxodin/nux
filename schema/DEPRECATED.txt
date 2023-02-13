@@ -1,0 +1,1 @@
+Was a experiment, use nuxodin/schema.js instead instead

@@ -13,7 +13,7 @@ function toHtmlInputSchema(schema){
     if (schema.type === 'bool' && attr.type === undefined) attr.type = 'checkbox';
     const mappable = ['patter', 'required', 'name'];
     if (attr.type === 'number') mappable.push('min', 'max');
-    for (var prop of mappable) {
+    for (const prop of mappable) {
         if (schema[prop] === undefined) continue;
         if (attr[prop] !== undefined) continue;
         attr[prop] = schema[prop];

@@ -43,7 +43,8 @@ const types = {
     TIME:      {hasLength:true,  isDate:false, isString:false, isNumber:false},
     YEAR:      {hasLength:true,  isDate:false, isString:false, isNumber:false},
     BOOL:      {hasLength:true,  isDate:false, isString:false, isNumber:false},
-}
+};
+
 const specials = ['','BINARY','UNSIGNED','UNSIGNED ZEROFILL','ON UPDATE CURRENT_TIMESTAMP'];
 const defaultKeys = {'NULL':1, 'CURRENT_TIMESTAMP':1, 'CURRENT_TIMESTAMP()':1, 'NOW()':1, 'LOCALTIME':1, 'LOCALTIME()':1, 'LOCALTIMESTAMP':1, 'LOCALTIMESTAMP()':1};
 
@@ -52,25 +53,25 @@ const defaultKeys = {'NULL':1, 'CURRENT_TIMESTAMP':1, 'CURRENT_TIMESTAMP()':1, '
 function foraignSchema(dbSchema, targetTable, targetField=undefined) {
     if (targetField) return dbSchema.properties[targetTable].properties[targetField];
     const primaries = [];
-    for (let [field, fieldSchema] of Object.entries(dbSchema.properties[targetTable].properties)) {
+    for (const [field, fieldSchema] of Object.entries(dbSchema.properties[targetTable].properties)) {
         if (fieldSchema.colIndex === 'primary') primaries.push(fieldSchema);
     }
     if (primaries.length === 1) return primaries[0];
 }
 
 export function completeDbScheme(dbSchema) {
-    for (let [table, schema] of Object.entries(dbSchema.properties)) {
-        for (let [field, fieldSchema] of Object.entries(schema.properties)) {
+    for (const [table, schema] of Object.entries(dbSchema.properties)) {
+        for (const [field, fieldSchema] of Object.entries(schema.properties)) {
             if (fieldSchema.colAutoincrement) {
                 if (fieldSchema.colIndex === undefined) fieldSchema.colIndex = 'primary';
                 if (fieldSchema.format === undefined) fieldSchema.format = 'uint32';
             }
         }
     }
-    for (let [table, schema] of Object.entries(dbSchema.properties)) {
-        for (let [field, fieldSchema] of Object.entries(schema.properties)) {
+    for (const [table, schema] of Object.entries(dbSchema.properties)) {
+        for (const [field, fieldSchema] of Object.entries(schema.properties)) {
             if (fieldSchema.colParent) {
-                var fSchema = foraignSchema(dbSchema, fieldSchema.colParent, fieldSchema.colParentField);
+                let fSchema = foraignSchema(dbSchema, fieldSchema.colParent, fieldSchema.colParentField);
                 if (fSchema) {
                     fSchema = mixin(fSchema);
                     delete fSchema.colIndex;
@@ -87,7 +88,7 @@ export function completeDbScheme(dbSchema) {
 
 function fieldSchemaToData(schema){
     Schema.complete(schema);
-    var data = mixin(formatDefaults[schema.format]);
+    const data = mixin(formatDefaults[schema.format]);
     mixin({special:'', type:'varchar'}, data);
     switch (schema.type) {
         case 'date':
@@ -100,7 +101,7 @@ function fieldSchemaToData(schema){
             //utf8mb4_german2_ci
             break;
         default:
-            data.collate = 'utf8mb4_general_ci';
+            data.collate = 'utf8mb4_general_ci'; // utf8mb4_unicode_ci, better
             break;
     }
     if (schema.maxLength !== undefined) {
@@ -144,7 +145,7 @@ export function to_column_definition(schema) {
     let collateStr = '';
     if (types[data.type].isNumber || types[data.type].isDate) data.collate = false;
     if (data.collate) {
-        let characterSet = data.collate.split('_')[0];
+        const characterSet = data.collate.split('_')[0];
         collateStr = "CHARACTER SET " + characterSet + " COLLATE " + data.collate + " ";
     }
     // null
