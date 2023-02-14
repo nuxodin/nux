@@ -16,17 +16,17 @@ export async function prepare(app){
     const dbSchema = app.schema.db;
 
     schemaSql.completeDbScheme(dbSchema);
-    for (let [table, schema] of Object.entries(dbSchema.properties)) {
+    for (const [table, schema] of Object.entries(dbSchema.properties)) {
         await app.db.query("CREATE TABLE IF NOT EXISTS `"+table+"` (`_tmp` tinyint NOT NULL default '0')");
-        var primaries = [];
-        for (let [field, fieldSchema] of Object.entries(schema.properties)) {
+        const primaries = [];
+        for (const [field, fieldSchema] of Object.entries(schema.properties)) {
             try {
-                var sql = schemaSql.alterSql(table, field, fieldSchema);
+                const sql = schemaSql.alterSql(table, field, fieldSchema);
                 await app.db.query(sql);
             } catch (e) {
                 console.log(e.message)
                 try {
-                    var sql = schemaSql.createSql(table, field, fieldSchema);
+                    const sql = schemaSql.createSql(table, field, fieldSchema);
                     await app.db.query(sql);
                 } catch (e) {
                     console.log(sql)
@@ -40,7 +40,6 @@ export async function prepare(app){
         }
     }
 }
-
 
 export const schema = {
     settings:{

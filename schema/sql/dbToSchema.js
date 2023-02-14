@@ -14,22 +14,22 @@ const typeTranslate = {
     'tinytext':'string',
 }
 export async function schemaFromDb(db) {
-    var all = await db.query("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA = '"+db.conn.config.db+"' ");
-    let schema = {
+    const all = await db.query("SELECT * FROM information_schema.`TABLES` WHERE TABLE_SCHEMA = '"+db.conn.config.db+"' ");
+    const schema = {
         properties:{},
         name:db.conn.config.db,
     };
-    for (let dbTable of all) {
-        let tableSchema = schema.properties[dbTable.TABLE_NAME] = {};
+    for (const dbTable of all) {
+        const tableSchema = schema.properties[dbTable.TABLE_NAME] = {};
         tableSchema.properties = {};
         tableSchema.name = dbTable.TABLE_NAME;
         tableSchema.defaults = {
             charset: dbTable.TABLE_COLLATION.replace(/_.+/,''),
         };
 
-        let fields = await db.query("SELECT * FROM information_schema.COLUMNS WHERE table_schema = '"+db.conn.config.db+"' AND table_name = '"+dbTable.TABLE_NAME+"' ORDER BY ORDINAL_POSITION");
+        const fields = await db.query("SELECT * FROM information_schema.COLUMNS WHERE table_schema = '"+db.conn.config.db+"' AND table_name = '"+dbTable.TABLE_NAME+"' ORDER BY ORDINAL_POSITION");
         tableSchema.properties = {};
-        for (let dbField of fields) {
+        for (const dbField of fields) {
             tableSchema.properties[dbField.COLUMN_NAME] = information_schema_columns_entry_to_schema(dbField);
         }
     }
@@ -37,10 +37,10 @@ export async function schemaFromDb(db) {
 }
 
 function information_schema_columns_entry_to_schema(dbField) {
-    let unsigned = dbField.COLUMN_TYPE.match(/ unsigned/,'') ? 'u':'';
+    const unsigned = dbField.COLUMN_TYPE.match(/ unsigned/,'') ? 'u':'';
     let type = unsigned+typeTranslate[ dbField.DATA_TYPE ];
     type = type[0].toUpperCase() + type.slice(1);
-    let length = parseInt(dbField.CHARACTER_MAXIMUM_LENGTH);
+    const length = parseInt(dbField.CHARACTER_MAXIMUM_LENGTH);
     return {
         name:     dbField.COLUMN_NAME,
         type,

@@ -29,7 +29,7 @@ export async function serve(ctx) {
         const pRefId = db.table('log_url').ensure({hash: sha1(referer), url: referer }).then(getRowId);
         const pIpId  = db.table('log_ip').ensure({ip: ctx.in.ip }).then(getRowId);
         const pUaId  = db.table('log_user_agent').ensure({user_agent:ua}).then(getRowId);
-        let [url_id, referer_id, ip_id, ua_id] = [await pUrlId, await pRefId, await pIpId, await pUaId];
+        const [url_id, referer_id, ip_id, ua_id] = [await pUrlId, await pRefId, await pIpId, await pUaId];
         const row = await db.table('log').insert({
             time: Date.now(),
             user_agent_id: ua_id,
