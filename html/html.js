@@ -7,12 +7,12 @@ export function documentFromObject(data) {
     '  <head>'+
     '    <meta charset="utf-8">\n'+
     '    <title>'+encode(data.title)+'</title>\n';
-    for (let [name, value] of Object.entries(data.meta)) {
+    for (const [name, value] of Object.entries(data.meta)) {
         if (!value) continue; // needed?
         html +=
         '    <meta '+objectToAttr({[name]:value})+'">\n';
     }
-    for (let link of data.link) {
+    for (const link of data.link) {
         html +=
         '    <link '+objectToAttr(link)+'>\n';
     }
@@ -26,8 +26,8 @@ export function documentFromObject(data) {
 
 export function objectToAttr(obj) {
     const htmAttr = [];
-    for (let name in obj) {
-        let value = obj[name];
+    for (const name in obj) {
+        const value = obj[name];
         if (value === false) continue;
         if (value === true) {
             htmAttr.push(name);
@@ -59,13 +59,13 @@ export function input(attr){
             const options = schema.options;
             let oneSelected = false;
             if (Array.isArray(options)) {
-                for (let option of options) {
+                for (const option of options) {
                     let selected = value === options ? ' selected' : '';
                     if (selected !== '') oneSelected = true;
                     content += '<option' + (selected)+'>' + encode(option);
                 }
             } else {
-                for (let [key, value] of Object.entries(options)) {
+                for (const [key, value] of Object.entries(options)) {
                     let selected = value === options ? ' selected' : '';
                     if (selected !== '') oneSelected = true;
                     content += '<option' + (selected) + ' value="' + hee(key) + '">' + hee(option);
@@ -176,20 +176,20 @@ export function dump(obj, maxLevel=5) {
                 }
 
                 // table
-                var cols = objectIsTable(obj);
+                const cols = objectIsTable(obj);
                 if (cols) {
                     let str = '<table id="'+id+'">';
                     str += '<thead>';
                     str += '<tr>';
                     str += '<td> ';
-                    for (let col in cols) {
+                    for (const col in cols) {
                         str += '<td>'+ encode(col);
                     }
                     str += '<tbody>';
-                    for (let [name, value] of Object.entries(obj)) {
+                    for (const [name, value] of Object.entries(obj)) {
                         str += '<tr>';
                         str += '<td>'+ encode(name);
-                        for (let col in cols) {
+                        for (const col in cols) {
                             str += '<td>'+ valueToHtml(value[col], level);
                         }
                     }
@@ -198,7 +198,7 @@ export function dump(obj, maxLevel=5) {
 
                 // object
                 let str = '<table id="'+id+'">';
-                for (let [name, value] of Object.entries(obj)) {
+                for (const [name, value] of Object.entries(obj)) {
                     str += '<tr>';
                     str += '<td>'+encode(name);
                     str += '<td>'+valueToHtml(value, level);
@@ -209,17 +209,17 @@ export function dump(obj, maxLevel=5) {
 
     function objectIsTable(obj) {
         const keys = {}; // cols
-        let numProps = 0;;
-        for (let prop in obj) {
+        let numProps = 0;
+        for (const prop in obj) {
             ++numProps;
-            for (let key in obj[prop]) {
+            for (const key in obj[prop]) {
                 if (keys[key] === undefined) keys[key] = 0;
                 keys[key]++;
             }
         }
         if (numProps < 3) return; // just two rows
         if (Object.values(keys).length < 2) return; // not enough cols
-        for (let keyNum of Object.values(keys)) {
+        for (const keyNum of Object.values(keys)) {
             if (keyNum < numProps/2) { // not minimum half the keys in sub obj
                 return;
             }

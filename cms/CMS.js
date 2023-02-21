@@ -9,15 +9,15 @@ export class Cms {
         return this.db.table('page').row(id);
     }
     async pageFromRequest(url) {
-        var page_id = await this.db.one("SELECT page_id FROM page_url WHERE url = "+this.db.quote(url));
+        const page_id = await this.db.one("SELECT page_id FROM page_url WHERE url = "+this.db.quote(url));
         if (!page_id) return false;
         return this.Page(page_id);
     }
     async redirectFromRequest(url) {
-        var redirect = await this.db.one("SELECT redirect FROM page_redirect WHERE request = "+this.db.quote(url));
+        const redirect = await this.db.one("SELECT redirect FROM page_redirect WHERE request = "+this.db.quote(url));
         if (!redirect) return false;
         if (redirect.match(/[0-9]+/)) {
-            let page = this.Page(redirect);
+            const page = this.Page(redirect);
             //url = server.scheme+'://'+server.host + Page(redirect)->url();
             return await page.url('de');
         }
@@ -57,7 +57,7 @@ export class Cms {
             mainPage = this.Page(88);
         }
 
-        var body = await mainPage.render();
+        const body = await mainPage.render();
         return `<html>
             <head>
             <body>${body}`;

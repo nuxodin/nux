@@ -9,7 +9,7 @@ export const info = async function(path) {
         stdout: "piped",
         stderr: "piped",
     });
-    const status = await p.status();
+    //const status = await p.status();
     const rawOutput = await p.output();
     const output = new TextDecoder().decode(rawOutput);
     const [width, height, alpha, compression, depth, classColorspace, quality] = output.split('|');
@@ -45,8 +45,8 @@ export async function resize(from, {to, w, h, crop=false, vpos=.5, hpos=.5}) {
         cmd = ['magick', 'convert', from, '-resize', w +'x'+h+'\>', to]; // fit
     } else  { // can make images bigger then original, what should i do?
         // crop
-        var data = await info(from);
-        var factor = Math.max(h/data.height, w/data.width);
+        const data = await info(from);
+        const factor = Math.max(h/data.height, w/data.width);
         const offX = (data.width  * factor - w) * hpos;
         const offY = (data.height * factor - h) * vpos;
         cmd = ['magick', 'convert', from, '-resize', w+'x'+h+'^', `-crop`, `${w}x${h}+${offX}+${offY}`, to];

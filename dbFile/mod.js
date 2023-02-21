@@ -23,18 +23,18 @@ export class dbFileManager {
 	async output(ctx) {
         const root = this.rootUrl + '/dbFile/';
         if (!ctx.url.pathName.startsWith(root)) return false;
-        let request = ctx.url.pathName.substr(root.length);
-        let x = request.split('/');
-        let id = parseInt(x.shift());
-		let name = x.pop();
+        const request = ctx.url.pathName.substr(root.length);
+        const x = request.split('/');
+        const id = parseInt(x.shift());
+		const name = x.pop();
         const param = {};
-        for (let part of x) {
+        for (const part of x) {
             part.split('-') // limit?
             param[part[0]] = part[1] ?? true;
         }
 		//qg::fire('file_ouput-before');
         let File = this.dbFile(id);
-        let RequestedFile = File;
+        const RequestedFile = File;
 
         if (! await File.exists()) {
             ctx.out.status = 404;
@@ -80,10 +80,10 @@ export class dbFileManager {
 
         ctx.out.header.set('content-type', mime);
 
-        let etag = 'qg' + File.mtime;
-        let HTTP_IF_NONE_MATCH = ctx.in.headers.get('HTTP_IF_NONE_MATCH');
+        const etag = 'qg' + File.mtime;
+        const HTTP_IF_NONE_MATCH = ctx.in.headers.get('HTTP_IF_NONE_MATCH');
         if (!HTTP_IF_NONE_MATCH || HTTP_IF_NONE_MATCH !== etag) {
-            let HTTP_RANGE = ctx.in.headers.get('HTTP_RANGE');
+            //const HTTP_RANGE = ctx.in.headers.get('HTTP_RANGE');
             //if (HTTP_RANGE) {
 			//	if (x_stream(File.path, HTTP_RANGE)) return;
 			//}
@@ -129,7 +129,7 @@ class dbFile {
 	}
 	async access(ctx, set) {
         if (set === undefined) {
-            let access = await this.dbRow.cell('access').value(); // todo: rename to "public"
+            const access = await this.dbRow.cell('access').value(); // todo: rename to "public"
             if (access) return true;
             return await this.manager.requestAccess(ctx, this);
         }
@@ -156,7 +156,7 @@ class dbFile {
 		//$this->path = appPATH.'qg/file/'.$this->vs['md5'];
 		//$this->setVs(['text'=>$this->getText(), 'size'=>$this->size()]);
 	}
-	async toString() {
+	toString() {
 		return this.id+'';
 	}
 	async used(){
@@ -256,18 +256,18 @@ class dbFile {
 			// 		$h *= (float)$dpr;
 			// 	}
             // }
-            let dpr = parseFloat(params.dpr ?? 1);
+            const dpr = parseFloat(params.dpr ?? 1);
             if (dpr > 1) {
                 w *= dpr;
                 h *= dpr;
             }
             w = Math.min(w,9000);
 			h = Math.min(h,9000);
-			let q    = parseInt(params.q ?? 77);
-			let max  = !!(params.max ?? false);
-			let vpos = parseFloat(params.vpos ?? 50);
-			let hpos = parseFloat(params.hpos ?? 50);
-			let zoom = parseFloat(params.zoom ?? 0);
+			const q    = parseInt(params.q ?? 77);
+			const max  = !!(params.max ?? false);
+			const vpos = parseFloat(params.vpos ?? 50);
+			const hpos = parseFloat(params.hpos ?? 50);
+			const zoom = parseFloat(params.zoom ?? 0);
 			type = this.mime.repace('image/', '');
 
             const md5 = await this.dbRow.cell('md5').value();
@@ -283,12 +283,12 @@ class dbFile {
             const newStat = await stat(newFile);
 
             if (!newStat || fileStat.mtime > newStat.mtime) {
-				let Img = new Image(this.path);
+				const Img = new Image(this.path);
 				if (w == 0 && h == 0) w = Img.width;
 
 				// prevent enlarge
-				let oldW = w;
-				let oldH = h;
+				const oldW = w;
+				const oldH = h;
 				w = Math.min(Img.width, $w);
 				h = Math.min(Img.height, $h);
 
@@ -330,7 +330,7 @@ class dbFile {
 				// 	}
 				// }
 			}
-			let mime = 'image/' + type;
+			//const mime = 'image/' + type;
 			return newFile;
 			// header("Pragma: public"); // Emails!?
 			// Pragma is the HTTP/1.0 implementation and cache-control is the HTTP/1.1 implementation of the same concept.
@@ -346,43 +346,41 @@ class dbFile {
 
 
 
-/*
-function x_stream($file) {
-    $filesize = sprintf("%u", filesize($file));
-	list($param, $range) = explode('=', $_SERVER['HTTP_RANGE']);
-	if ($param != 'bytes') trigger_error('not "bytes"?');
-	// Get range values
-	$range = explode(',',$range);
-	$range = explode('-',$range[0]);
-	// Deal with range values
-	if ($range[0] === ''){
-		$end = $filesize - 1;
-		$start = $end - (int)$range[0];
-	} else if ($range[1] === '') {
-		$start = (int)$range[0];
-		$end = $filesize - 1;
-	} else {
-		// Both numbers present, return specific range
-		$start = (int)$range[0];
-		$end =   (int)$range[1];
-		if ($end >= $filesize || (!$start && (!$end || $end == ($filesize - 1)))) return; // Invalid range/whole file specified, return whole file
-	}
-	$length = $end - $start + 1;
-    // Send standard headers
-    header('Content-Length: ' .$length);
-    header('Accept-Ranges: bytes');
-    // send extra headers for range handling...
-	header('HTTP/1.1 206 Partial Content');
-	header("Content-Range: bytes $start-$end/$filesize");
-	$fp = fopen($file, 'rb');
-	if ($start) fseek($fp,$start);
-	while ($length) {
-		//set_time_limit(0);
-		$read = ($length > 8192) ? 8192 : $length;
-		$length -= $read;
-		print(fread($fp,$read));
-	}
-	fclose($fp);
-	return true;
-}
-*/
+// function x_stream($file) {
+//     $filesize = sprintf("%u", filesize($file));
+// 	list($param, $range) = explode('=', $_SERVER['HTTP_RANGE']);
+// 	if ($param != 'bytes') trigger_error('not "bytes"?');
+// 	// Get range values
+// 	$range = explode(',',$range);
+// 	$range = explode('-',$range[0]);
+// 	// Deal with range values
+// 	if ($range[0] === ''){
+// 		$end = $filesize - 1;
+// 		$start = $end - (int)$range[0];
+// 	} else if ($range[1] === '') {
+// 		$start = (int)$range[0];
+// 		$end = $filesize - 1;
+// 	} else {
+// 		// Both numbers present, return specific range
+// 		$start = (int)$range[0];
+// 		$end =   (int)$range[1];
+// 		if ($end >= $filesize || (!$start && (!$end || $end == ($filesize - 1)))) return; // Invalid range/whole file specified, return whole file
+// 	}
+// 	$length = $end - $start + 1;
+//     // Send standard headers
+//     header('Content-Length: ' .$length);
+//     header('Accept-Ranges: bytes');
+//     // send extra headers for range handling...
+// 	header('HTTP/1.1 206 Partial Content');
+// 	header("Content-Range: bytes $start-$end/$filesize");
+// 	$fp = fopen($file, 'rb');
+// 	if ($start) fseek($fp,$start);
+// 	while ($length) {
+// 		//set_time_limit(0);
+// 		$read = ($length > 8192) ? 8192 : $length;
+// 		$length -= $read;
+// 		print(fread($fp,$read));
+// 	}
+// 	fclose($fp);
+// 	return true;
+// }

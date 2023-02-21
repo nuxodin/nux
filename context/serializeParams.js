@@ -5,13 +5,13 @@
  */
 
 export function serializeParams(items) {
-	var object = Object.create(null);
-	for (let item of items) {
-		var name = item[0];
-		var value = item[1];
-		var matches = name.match(/(^[^\[]+|\[[^\]]*\])/g);
-		var active = object;
-		for (var i=0, match; match=matches[i++];) { // walk path (item[xy][])
+	const object = Object.create(null);
+	for (const item of items) {
+		const name = item[0];
+		const value = item[1];
+		const matches = name.match(/(^[^\[]+|\[[^\]]*\])/g);
+		let active = object;
+		for (let i=0, match; match=matches[i++];) { // walk path (item[xy][])
 			if (i>1) match = match.replace(/(^\[|\]$)/g,'');
 			if (matches.length === i) { // at the end
 				if (Array.isArray(active)) active.push(value);

@@ -32,7 +32,7 @@ class SessionManager {
         this.memoryMaxAge = 4000;
     }
     async generate(){
-        let hash = sha1(Math.random());
+        const hash = sha1(Math.random());
         await this.db.table('sess').insert({hash});
         return this.get(hash);
     }
@@ -43,13 +43,13 @@ class SessionManager {
     async ensure(hash) {
         if (!hash) return await this.generate();
         let session = this.get(hash);
-        let valid = await session.isValid();
+        const valid = await session.isValid();
         if (!valid) session = await this.generate();
         return session;
     }
     async fromContext(ctx) {
-        let hash = ctx.cookies.get('sess_id');
-        let session = await this.ensure(hash);
+        const hash = ctx.cookies.get('sess_id');
+        const session = await this.ensure(hash);
         if (hash !== session.hash) console.log('new cookie', session.hash);
         ctx.cookies.set('sess_id', {
             value: session.hash,
@@ -101,8 +101,7 @@ class Session {
         this.touch();
     }
     async save(){ // todo: debounce
-        let json = JSON.stringify(this.data);
-
+        const json = JSON.stringify(this.data);
         await this.manager.db.table('sess').row(this.id).set({
             data: json,
             max_age: this.maxAge,

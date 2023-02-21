@@ -17,7 +17,7 @@ class TextPro {
         const Text = await this.get(lang);
         const value = await Text.cell('text').value;
         if (!value) {
-            for (let l of ['de','en']) {
+            for (const l of ['de','en']) {
                 if (l === lang) continue;
                 const Text = await this.get(l);
                 const value = await Text.cell(text).value;

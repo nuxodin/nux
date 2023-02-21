@@ -1,7 +1,7 @@
 
 // todo: json-schema
 
-export var db = {properties:{
+export const db = {properties:{
     page:{properties:{
         id:{ colAutoincrement:true },
         log_id:{ colParent:'log' },
@@ -41,9 +41,6 @@ export var db = {properties:{
         file_id: { colParent:'file', colIndex:true },
         sort:    { max:3000, colIndex:true },
     }},
-
-
-
 }};
 
 /*

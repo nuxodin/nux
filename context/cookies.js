@@ -7,7 +7,7 @@ export class Cookies2 {
 		this._newCookies = Object.create(null);
 	}
 	get oldCookies(){
-		var cookies = getCookies(this.request);
+		const cookies = getCookies(this.request);
 		Object.defineProperty(this,'oldCookies',{value:cookies});
 		return cookies;
 	}

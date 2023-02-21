@@ -7,6 +7,5 @@ export async function init(app){
 
 export async function serve(ctx){
     if (!ctx.in.url.pathname.startsWith( this.config.basePath )) return;
-    let found = await this.fileServer.serve(ctx);
-    return found;
+    return await this.fileServer.serve(ctx);
 }

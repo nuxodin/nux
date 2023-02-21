@@ -20,16 +20,16 @@ export class NuxApp extends EventTarget {
         this.modules = {};
     }
 	async start(port){
-        var myPath = new URL(import.meta.url).pathname.substr(1);
-        const httpsOptions = {
-            hostname: "localhost",
-            port: 88,
-            certFile: myPath + '/../app/test_localhost.cert',
-            keyFile: myPath + '/../app/test_localhost.key',
-        };
+        // const myPath = new URL(import.meta.url).pathname.substr(1);
+        // const httpsOptions = {
+        //     hostname: "localhost",
+        //     port: 88,
+        //     certFile: myPath + '/../app/test_localhost.cert',
+        //     keyFile: myPath + '/../app/test_localhost.key',
+        // };
         [[serve, ':'+port]/*, [serveTLS, httpsOptions]*/].forEach(async ([fn, arg])=>{
             for await (const denoRequest of fn(arg)) {
-                var response = await this.serve(denoRequest);
+                const response = await this.serve(denoRequest);
                 if (response) denoRequest.respond(response);
             }
         });
@@ -41,43 +41,40 @@ export class NuxApp extends EventTarget {
     }
     async serve(denoRequest){
         if (!denoRequest.url.startsWith(this.config.basePath)) return;
-        var ctx = getContext(denoRequest);
+        const ctx = getContext(denoRequest);
         ctx.appUrlPart = denoRequest.url.substr(this.config.basePath.length);
         ctx.app = this;
         await this._modulesCall('serve', ctx);
         return await ctx.out.toServerResponse();
     }
     async _modulesCall(what, arg){
-        for (let module in this.modules) {
-            let exports = this.modules[module];
+        for (const module in this.modules) {
+            const exports = this.modules[module];
             if (!exports[what]) continue;
-            var stop = await exports[what].call(this, arg);
+            const stop = await exports[what].call(this, arg);
             if (stop !== undefined) return;
         }
     }
     async need(module) {
-        var exports = await module;
+        const exports = await module;
         if (exports.init) await exports.init(this);
         this.modules[exports.namespace] = exports;
     }
     async init() {
         this.schema = {};
-        for (let module in this.modules) {
-            let exports = this.modules[module];
+        for (const module in this.modules) {
+            const exports = this.modules[module];
             if (!exports.schema) continue;
             const schema = await exports.schema;
             mixin(schema, this.schema, false, true);
         }
 
-//        await Deno.create(this.config.appPath + '/config.json');
-        const configJson = await Deno.readTextFile(this.config.appPath + '/config.json');
-        const config = JSON.parse(configJson);
-        console.log(config)
+        //await Deno.create(this.config.appPath + '/config.json');
+        //const configJson = await Deno.readTextFile(this.config.appPath + '/config.json');
+        //const config = JSON.parse(configJson);
 
-
-
-        for (let module in this.modules) {
-            let exports = this.modules[module];
+        for (const module in this.modules) {
+            const exports = this.modules[module];
             if (!exports.prepare) continue;
             exports.prepare(this);
         }

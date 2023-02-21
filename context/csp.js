@@ -33,4 +33,4 @@ export class Csp {
         if (this.report_uri) str += ' report-uri '+this.report_uri;
         return str;
     }
-};
+}

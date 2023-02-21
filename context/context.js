@@ -28,7 +28,7 @@ class Request {
 		// request-headers
 		this.headers = oRequest.headers;
 		// Url-object
-		let proto = oRequest.conn.remoteAddr.transport === 'tcp' ? 'https:' : 'http:'; // ok?
+		const proto = oRequest.conn.remoteAddr.transport === 'tcp' ? 'https:' : 'http:'; // ok?
 		this.url = new URL(proto + '//' + this.headers.get('host') + oRequest.url);
 		this.__get = serializeParams(this.url.searchParams); // beta
 	}
@@ -44,7 +44,7 @@ class Response {
 	}
 	toServerResponse() {
 		// body
-		let body = this.body;
+		const body = this.body;
 		// header
 		let x = this.csp.toString();
 		if (x) this.headers.append('Content-Security-Policy', x);
@@ -59,7 +59,7 @@ class Response {
 	}
 	mixin(request) {
 		if (request.headers) {
-			for (let [key, value] of request.headers) {
+			for (const [key, value] of request.headers) {
 				this.headers.set(key, value);
 			}
 		}

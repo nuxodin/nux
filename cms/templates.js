@@ -1,4 +1,4 @@
-let c1Render = async function (strings, ...values){
+const c1Render = async function (strings, ...values){
 	values = await Promise.all(values);
 	let result = '';
     strings.forEach((string, key)=>{
@@ -8,7 +8,7 @@ let c1Render = async function (strings, ...values){
 }
 
 
-var templates = Object.create(null);
+const templates = Object.create(null);
 
 
 templates['cms.cont.text'] = async (page) => {

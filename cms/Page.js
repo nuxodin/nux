@@ -10,12 +10,12 @@ const Page = class extends Row {
         return P;
     }
     async render() {
-        let module = await this.$module;
+        const module = await this.$module;
         if (!templates[module]) return '<div>webmaster: module does not exist</div>';
         let string = await templates[module](this);
         if (!string) string = '<div></div>';
         string = string.trim();
-        let attr = 'vcms-id='+this.eid+' vcms-mod="'+module+'"';
+        const attr = 'vcms-id='+this.eid+' vcms-mod="'+module+'"';
         return string.replace(/^<([^\s>]+)([\s]?)>/, '<$1 '+attr+'$2>');
     }
     async text(name='main', lang=null/*, value=null*/) {
@@ -44,8 +44,8 @@ const Page = class extends Row {
         if (!this._children) {
             this._children = {p:[],c:[]};
             const all = await this.table.rows({basis:this.eid});
-            for (let child of all) {
-                let values = await child.values();
+            for (const child of all) {
+                const values = await child.values();
                 this._children[values.type].push(child);
                 this._named[values.type][values.name] = child;
             }
@@ -124,10 +124,10 @@ const Page = class extends Row {
 
     async url(lang) {
         if (!this._urls) {
-            let rows = await this.table.db.$page_url.rows({page_id:this.eid});
+            const rows = await this.table.db.$page_url.rows({page_id:this.eid});
             this._urls = {};
-            for (let row of rows) {
-                let lang = await row.$lang;
+            for (const row of rows) {
+                const lang = await row.$lang;
                 this._urls[lang] = row;
             }
         }

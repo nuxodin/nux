@@ -3,7 +3,7 @@
 
 import {NuxApp} from '../app/app.js';
 
-var app = new NuxApp({
+const app = new NuxApp({
     basePath: '/',
     appPath: import.meta.url.replace('file:///','').replace(/\/[^\/]+$/, ''),
     db: {
@@ -27,7 +27,7 @@ await app.need(import('../app/moduleManager.js'));
 await app.need({
     namespace: 'xxx',
     serve: async function(ctx){
-        var app = ctx.app;
+        const app = ctx.app;
         ctx.out.headers.set("content-type", "text/html; charset=utf-8");
         ctx.out.body += `
             <!DOCTYPE html>

@@ -7,7 +7,7 @@ export function init(app){
 }
 
 export async function serve (ctx) {
-	var page = await this.cms.pageFromRequest(ctx.appUrlPart);
+	const page = await this.cms.pageFromRequest(ctx.appUrlPart);
 	if (page) {
         let body = await page.render();
         body += ctx.in.url.toString();
