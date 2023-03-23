@@ -34,7 +34,7 @@ await app.need({
             <html lang="en">
                 <head>
                     <script type=module>
-                        import {render, html, svg} from '${app.uncdn.url('https://unpkg.com/uhtml@1.10.0/esm/index.js?module')}';
+                        import {render, html, svg} from '${app.uncdn.url('https://unpkg.com/uhtml@3.1.0/esm/index.js?module')}';
                         render(uhtml, html\`<h1>Hello 👋 uncdn</h1>\`);
                     </script>
                 <body>

@@ -32,9 +32,9 @@ export class Uncdn {
      */
     async requestToResponse(req) {
         if (!req.url.startsWith(this.rootUrl)) return false;
-        let cdnUrl = req.url.substr(this.rootUrl.length);
+        const cdnUrl = req.url.substr(this.rootUrl.length);
         try {
-            var path = this._path(cdnUrl);
+            const path = this._path(cdnUrl);
             const response = await serveFile(req, path);
             response.headers.set("content-type", 'text/javascript');
             response.headers.set("cache-control", 'public, max-age=31536000'); // immutable?
@@ -48,7 +48,7 @@ export class Uncdn {
         }
     }
     async serve(req) {
-        var resp = this.requestToResponse(req);
+        const resp = this.requestToResponse(req);
         if (!resp) return false;
         //req.response(resp); // second argument?????
         req.response(resp, {}); // zzz
@@ -57,11 +57,13 @@ export class Uncdn {
         let localPart = url; //.replace(/https:\/\//,'');
         if (options.bundle) localPart = localPart.replace(/\.js$/,'.bndl.js');
         if (options.minify) localPart = localPart.replace(/\.js$/,'.min.js');
+        //if (options.bundle) localPart = localPart.replace(/\.js(\?|$)/,'.bndl.js');
+        //if (options.minify) localPart = localPart.replace(/\.js(\?|$)/,'.min.js');
         return localPart;
     }
     /* private */
     async _ensure(url, options){
-        var path = this._path( this._urlToLocalPart(url, options) );
+        const path = this._path( this._urlToLocalPart(url, options) );
         try {
             await Deno.stat(path);
         } catch (e) { // not found
