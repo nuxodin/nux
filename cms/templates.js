@@ -8,7 +8,7 @@ const c1Render = async function (strings, ...values){
 }
 
 
-const templates = Object.create(null);
+const templates = {};
 
 
 templates['cms.cont.text'] = async (page) => {
