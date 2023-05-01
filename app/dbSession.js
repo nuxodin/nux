@@ -1,14 +1,7 @@
-import {Sha1} from "https://deno.land/std@0.93.0/hash/sha1.ts";
-
-function sha1(string){
-    const sha1 = new Sha1();
-    sha1.update(string);
-    return sha1.toString();
-}
 
 export const namespace = 'sess';
 
-export async function init(app){
+export function init(app){
     app.sessionManager = new SessionManager(app.db);
 }
 
@@ -18,21 +11,15 @@ export async function serve(ctx){
     ctx.session.touch();
 }
 
-// export function unserve(req) {
-//     req.session.touch();
-// }
-
-
-
 class SessionManager {
     constructor(db) {
         this.db = db;
         this.pool = {};
         this.maxAge = 60*60*24;
-        this.memoryMaxAge = 4000;
+        this.memoryMaxAge = 40000;
     }
     async generate(){
-        const hash = sha1(Math.random());
+        const hash = crypto.randomUUID();
         await this.db.table('sess').insert({hash});
         return this.get(hash);
     }
@@ -56,8 +43,8 @@ class SessionManager {
             httpOnly: true,
             secure: true,
             maxAge: this.maxAge + 100,
+            path: '/',
             //expires: new Date(),
-            //path:
             //sameSite:
         });
         return session;
@@ -90,11 +77,10 @@ class Session {
     async isValid(){
         await this.load();
         if (this.valid !== undefined) return this.valid;
-        return true; // todo
-        if (this.lastAccess < Date.now() - this.maxAge * 1000) {
-            return false;
-        }
-        return true;
+        // if (this.lastAccess < Date.now() - this.maxAge * 1000) {
+        //     return false;
+        // }
+        return true;// todo
     }
     setMaxAge(seconds){
         this.maxAge = seconds;
@@ -105,18 +91,19 @@ class Session {
         await this.manager.db.table('sess').row(this.id).set({
             data: json,
             max_age: this.maxAge,
-            last_access: this.lastAccess,
+            last_access: this.lastAccess.toString(),
         });
     }
     touch(){
         this.lastAccess = Date.now();
         setTimeout(()=>this.save(), 100)
+
         clearTimeout(this.memoryTimeout);
         this.memoryTimeout = setTimeout(()=>{
             delete this.manager.pool[this.hash];
         }, this.manager.memoryMaxAge); // hold in memory for the following requests, longer?
     }
-    destroi(){
+    destroy(){
         this.id = false;
         this.data = null;
         this.hash = null;

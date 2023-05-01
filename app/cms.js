@@ -15,7 +15,3 @@ export async function serve (ctx) {
         return true;
     }
 }
-
-
-import * as schemas from '../cms/dbSchema.js';
-//export {db:schemas.db};

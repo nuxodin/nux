@@ -11,7 +11,7 @@ const Page = class extends Row {
     }
     async render() {
         const module = await this.$module;
-        if (!templates[module]) return '<div>webmaster: module does not exist</div>';
+        if (!templates[module]) return '<div>webmaster: module "'+module+'" does not exist</div>';
         let string = await templates[module](this);
         if (!string) string = '<div></div>';
         string = string.trim();

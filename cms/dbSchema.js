@@ -42,29 +42,3 @@ export const db = {properties:{
         sort:    { max:3000, colIndex:true },
     }},
 }};
-
-/*
-	<table name="page_redirect">
-		<field name="request"  type="varchar"  length="255" key="PRI" null=""  />
-		<field name="redirect" type="text"     length=""    key=""    null="" />
-	</table>
-	<table name="page_text">
-		<field name="page_id"  type="int"      length="10"  key="PRI" null="" parent="page" on_parent_delete="cascade" />
-		<field name="name"     type="varchar"  length="128" key="PRI" null="" />
-		<field name="text_id"  type="int"      length="10"  key="MUL" null="" parent="text" on_parent_delete="cascade" />
-	</table>
-	<table name="page_url">
-		<field name="page_id"  type="int"                   key="PRI" null="" parent="page" on_parent_delete="cascade" />
-		<field name="lang"     type="varchar"  length="12"  key="PRI" null="" />
-		<field name="url"      type="varchar"  length="255" key="MUL" null="" />
-		<field name="custom"   type="tinyint"  length="1"             null="" />
-		<field name="target"   type="text"                            null="" />
-	</table>
-	<table name="grp">
-		<field name="page_access" type="tinyint" length="1" key="MUL" null="" />
-	</table>
-	<table name="mail">
-		<field name="page_id"     type="int"                key="MUL" null="true" parent="page" on_parent_delete="setnull" />
-	</table>
-</dbscheme>
-*/

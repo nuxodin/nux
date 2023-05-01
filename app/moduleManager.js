@@ -1,4 +1,4 @@
-import * as html from '../html/html.js';
+import {dump} from 'https://cdn.jsdelivr.net/gh/nuxodin/dump.js/mod.js';
 
 export const namespace = 'moduleManager';
 
@@ -10,7 +10,7 @@ export async function serve(ctx) {
             <html lang="en">
                 <body>
             `+
-            html.dump(window);
+            dump(window);
 
         return true;
     }

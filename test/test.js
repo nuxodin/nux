@@ -14,7 +14,6 @@ const app = new NuxApp({
     }
 });
 
-
 await app.need(import('../app/fileServer.js'));
 await app.need(import('../app/db.js'));
 await app.need(import('../app/log.js'));
@@ -42,7 +41,6 @@ await app.need({
                     <p>log-id: ${await ctx.log.id}<br></p>
                     <p>sess-hash: ${await ctx.session.hash}<br></p>
             `;
-            //ctx.out.body += html.dump(this);
         }
 })
 await app.init();

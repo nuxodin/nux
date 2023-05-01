@@ -1,7 +1,6 @@
 import { Cookies2 } from "./cookies.js";
 import { serializeParams } from "./serializeParams.js";
 import { Csp } from "./csp.js";
-//import Introspected from "https://raw.githubusercontent.com/nuxodin/introspected/master/esm/introspected.js";
 
 const pool = new WeakMap();
 
